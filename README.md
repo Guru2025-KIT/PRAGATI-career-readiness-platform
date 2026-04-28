@@ -16,7 +16,7 @@
 
 > **A full-stack campus placement preparation platform** powered by NLP-based AI, adaptive learning algorithms, and real-time analytics — built for engineering colleges.
 
-*Mini Project · Dept. of Computer Science (AI & ML) · KIT's College of Engineering, Kolhapur · 2026–27*
+*Mini Project · Dept. of Computer Science (AI & ML) · KIT's College of Engineering, Kolhapur · *
 
 </div>
 
