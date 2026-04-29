@@ -79,79 +79,127 @@ function VoiceButton({ onResult }) {
   );
 }
 
-/* ── Debug Result Panel ──────────────────────────────────────────── */
-function DebugPanel({ result, loading }) {
-  const [showFix, setShowFix] = useState(false);
+
+/* ── Debug Result Panel (v2 — rich, inline, with trace viewer) ───── */
+function DebugPanel({ result, loading, code, onApplyFix }) {
+  const [showFix, setShowFix]   = useState(false);
+  const [copiedFix, setCopied]  = useState(false);
+  const [expandTC, setExpandTC] = useState({});
 
   if (loading) return (
-    <div style={{ marginTop:14, padding:'20px 18px', background:'rgba(83,22,151,0.04)', border:'1px solid rgba(83,22,151,0.12)', borderRadius:12, display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
-      <div style={{ width:36, height:36, border:'3px solid #d0d7e8', borderTopColor:'#531697', borderRadius:'50%', animation:'_dbg .7s linear infinite' }} />
-      <span style={{ fontSize:'.88rem', color:'#531697', fontWeight:700 }}>🤖 Gemini AI is analysing your code…</span>
-      <span style={{ fontSize:'.75rem', color:'#b0bec9' }}>Tracing through logic, checking edge cases, running test cases mentally</span>
-      <style>{`@keyframes _dbg{to{transform:rotate(360deg)}}`}</style>
+    <div style={{ marginTop:14, padding:'22px 18px', background:'#0f172a', border:'1px solid rgba(83,22,151,0.3)', borderRadius:14, display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+      <div style={{ position:'relative', width:44, height:44 }}>
+        <div style={{ position:'absolute', inset:0, border:'3px solid rgba(83,22,151,0.2)', borderTopColor:'#531697', borderRadius:'50%', animation:'_spin .7s linear infinite' }} />
+        <div style={{ position:'absolute', inset:6, border:'2px solid rgba(19,161,165,0.2)', borderTopColor:'#13a1a5', borderRadius:'50%', animation:'_spin .5s linear infinite reverse' }} />
+      </div>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontSize:'.9rem', color:'#a78bfa', fontWeight:800 }}>🤖 Analysing your code…</div>
+        <div style={{ fontSize:'.72rem', color:'#64748b', marginTop:4 }}>Tracing logic · Checking edge cases · Running test cases</div>
+      </div>
+      <style>{`@keyframes _spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
   if (!result) return null;
 
-  const vc = { likely_correct:'#47d372', review:'#f59e0b', has_errors:'#ef4444' };
-  const vb = { likely_correct:'rgba(71,211,114,0.08)', review:'rgba(245,158,11,0.08)', has_errors:'rgba(239,68,68,0.08)' };
-  const ve = { likely_correct:'rgba(71,211,114,0.25)', review:'rgba(245,158,11,0.25)', has_errors:'rgba(239,68,68,0.25)' };
-  const v  = result.verdict || 'review';
+  const v = result.verdict || 'review';
+  const cfg = {
+    likely_correct: { bg:'#052e16', brd:'rgba(71,211,114,0.35)', hdr:'rgba(71,211,114,0.12)', icon:'✅', color:'#4ade80', label:'All Correct' },
+    review:         { bg:'#1c1506', brd:'rgba(245,158,11,0.35)',  hdr:'rgba(245,158,11,0.10)', icon:'⚠️', color:'#fbbf24', label:'Needs Review' },
+    has_errors:     { bg:'#1a0505', brd:'rgba(239,68,68,0.35)',   hdr:'rgba(239,68,68,0.10)',  icon:'❌', color:'#f87171', label:'Errors Found' },
+  }[v] || { bg:'#1a1a2e', brd:'rgba(83,22,151,0.3)', hdr:'rgba(83,22,151,0.08)', icon:'🔍', color:'#a78bfa', label:'Analysis' };
+
+  const passed = result.testResults?.filter(t=>t.passed===true).length || 0;
+  const total  = result.testResults?.length || 0;
+
+  function copyFix() {
+    if (result.suggestedFix) { navigator.clipboard.writeText(result.suggestedFix).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2000); }); }
+  }
 
   return (
-    <div style={{ marginTop:14, border:`1.5px solid ${ve[v]}`, borderRadius:14, overflow:'hidden', fontFamily:"'Nunito',sans-serif" }}>
+    <div style={{ marginTop:14, border:`1.5px solid ${cfg.brd}`, borderRadius:16, overflow:'hidden', fontFamily:"'Nunito',sans-serif", background:cfg.bg }}>
 
-      {/* ── Header ── */}
-      <div style={{ padding:'14px 18px', background:vb[v], borderBottom:`1px solid ${ve[v]}`, display:'flex', alignItems:'center', gap:12 }}>
-        <div style={{ width:40, height:40, borderRadius:'50%', border:`2px solid ${vc[v]}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.2rem', flexShrink:0 }}>
-          {v==='likely_correct'?'✅':v==='has_errors'?'❌':'⚠️'}
+      {/* ── Header bar ── */}
+      <div style={{ padding:'14px 18px', background:cfg.hdr, borderBottom:`1px solid ${cfg.brd}`, display:'flex', alignItems:'center', gap:12 }}>
+        <div style={{ width:42, height:42, borderRadius:'50%', border:`2px solid ${cfg.color}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.2rem', flexShrink:0, background:`${cfg.color}15` }}>
+          {cfg.icon}
         </div>
         <div style={{ flex:1 }}>
-          <div style={{ fontWeight:800, fontSize:'.9rem', color:'#0f1a2e', fontFamily:"'Syne',sans-serif", display:'flex', alignItems:'center', gap:6 }}>
-            🤖 Gemini AI Debug Report
-            {result.source && (
-              <span style={{ padding:'1px 8px', borderRadius:999, background: result.source==='gemini'?'rgba(66,133,244,0.1)':'rgba(83,22,151,0.08)', color: result.source==='gemini'?'#4285f4':'#531697', fontSize:'.65rem', fontWeight:700 }}>
-                {result.source==='gemini'?'✨ Gemini 2.0 Flash':result.source==='ml'?'🧠 ML Model':'⚙️ Static Analysis'}
-              </span>
-            )}
+          <div style={{ fontWeight:800, fontSize:'.92rem', color:'#f1f5f9', fontFamily:"'Syne',sans-serif", display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+            🤖 AI Debug Report
+            <span style={{ padding:'2px 8px', borderRadius:999, background: result.source==='gemini'?'rgba(66,133,244,0.18)':'rgba(83,22,151,0.15)', color: result.source==='gemini'?'#93c5fd':'#c4b5fd', fontSize:'.65rem', fontWeight:700 }}>
+              {result.source==='groq'?'⚡ Groq AI':result.source==='gemini'?'✨ Gemini AI':result.source==='rule-based'?'⚙️ Static Analysis':'🧠 Analysis'}
+            </span>
           </div>
-          <div style={{ fontSize:'.82rem', color:vc[v], fontWeight:700, marginTop:2 }}>{result.verdictMessage}</div>
+          <div style={{ fontSize:'.83rem', color:cfg.color, fontWeight:700, marginTop:2 }}>{result.verdictMessage}</div>
         </div>
-        {/* Complexity badges */}
-        {(result.timeComplexity||result.spaceComplexity) && result.timeComplexity!=='N/A' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:4, alignItems:'flex-end', flexShrink:0 }}>
-            {result.timeComplexity && result.timeComplexity!=='N/A' && (
-              <span style={{ padding:'2px 8px', borderRadius:6, background:'rgba(83,22,151,0.08)', color:'#531697', fontSize:'.68rem', fontWeight:800 }}>⏱ {result.timeComplexity}</span>
-            )}
-            {result.spaceComplexity && result.spaceComplexity!=='N/A' && (
-              <span style={{ padding:'2px 8px', borderRadius:6, background:'rgba(19,161,165,0.08)', color:'#13a1a5', fontSize:'.68rem', fontWeight:800 }}>💾 {result.spaceComplexity}</span>
-            )}
-          </div>
-        )}
+        <div style={{ display:'flex', flexDirection:'column', gap:5, alignItems:'flex-end', flexShrink:0 }}>
+          {result.timeComplexity && result.timeComplexity!=='N/A' && (
+            <span style={{ padding:'2px 9px', borderRadius:6, background:'rgba(83,22,151,0.2)', color:'#c4b5fd', fontSize:'.68rem', fontWeight:800 }}>⏱ {result.timeComplexity}</span>
+          )}
+          {result.spaceComplexity && result.spaceComplexity!=='N/A' && (
+            <span style={{ padding:'2px 9px', borderRadius:6, background:'rgba(19,161,165,0.2)', color:'#5eead4', fontSize:'.68rem', fontWeight:800 }}>💾 {result.spaceComplexity}</span>
+          )}
+        </div>
       </div>
 
       <div style={{ padding:'16px 18px', display:'flex', flexDirection:'column', gap:14 }}>
 
         {/* ── AI Explanation ── */}
         {result.explanation && (
-          <div style={{ padding:'12px 14px', background:'rgba(83,22,151,0.04)', border:'1px solid rgba(83,22,151,0.1)', borderRadius:10 }}>
-            <div style={{ fontSize:'.72rem', fontWeight:800, color:'#531697', marginBottom:5, letterSpacing:'.05em' }}>🧠 AI ANALYSIS</div>
-            <div style={{ fontSize:'.83rem', color:'#3d4e6b', lineHeight:1.7 }}>{result.explanation}</div>
+          <div style={{ padding:'13px 15px', background:'rgba(83,22,151,0.1)', border:'1px solid rgba(83,22,151,0.2)', borderRadius:11 }}>
+            <div style={{ fontSize:'.7rem', fontWeight:800, color:'#a78bfa', marginBottom:6, letterSpacing:'.06em' }}>🧠 AI ANALYSIS</div>
+            <div style={{ fontSize:'.84rem', color:'#cbd5e1', lineHeight:1.75 }}>{result.explanation}</div>
           </div>
         )}
 
-        {/* ── Issues ── */}
+        {/* ── Issues with line highlights ── */}
         {result.issues?.length > 0 && (
           <div>
-            <div style={{ fontSize:'.72rem', fontWeight:800, color:'#3d4e6b', marginBottom:8, letterSpacing:'.05em' }}>🔍 ISSUES FOUND ({result.issues.length})</div>
+            <div style={{ fontSize:'.7rem', fontWeight:800, color:'#94a3b8', marginBottom:8, letterSpacing:'.06em' }}>
+              🔍 ISSUES ({result.issues.length}) — {result.issues.filter(i=>i.type==='error').length} error{result.issues.filter(i=>i.type==='error').length!==1?'s':''}, {result.issues.filter(i=>i.type==='warning').length} warning{result.issues.filter(i=>i.type==='warning').length!==1?'s':''}
+            </div>
             {result.issues.map((issue, i) => {
-              const ic = { error:'#ef4444', warning:'#f59e0b', info:'#13a1a5' }[issue.type] || '#7a8ba8';
+              const ic = issue.type==='error'?'#f87171':issue.type==='warning'?'#fbbf24':'#5eead4';
+              const ibg = issue.type==='error'?'rgba(248,113,113,0.08)':issue.type==='warning'?'rgba(251,191,36,0.08)':'rgba(94,234,212,0.08)';
+              const ibrd = issue.type==='error'?'rgba(248,113,113,0.25)':issue.type==='warning'?'rgba(251,191,36,0.2)':'rgba(94,234,212,0.2)';
               return (
-                <div key={i} style={{ display:'flex', gap:9, padding:'9px 12px', background:`${ic}08`, border:`1.5px solid ${ic}25`, borderRadius:9, marginBottom:6, alignItems:'flex-start' }}>
-                  <span style={{ fontSize:'.85rem', flexShrink:0, marginTop:1 }}>{issue.type==='error'?'❌':issue.type==='warning'?'⚠️':'ℹ️'}</span>
-                  <div>
-                    {issue.line && <span style={{ fontSize:'.68rem', fontWeight:800, color:ic, marginRight:6, background:`${ic}15`, padding:'1px 6px', borderRadius:4 }}>Line {issue.line}</span>}
-                    <span style={{ fontSize:'.83rem', color:'#0f1a2e', fontWeight:600 }}>{issue.msg}</span>
+                <div key={i} style={{ display:'flex', gap:10, padding:'10px 13px', background:ibg, border:`1.5px solid ${ibrd}`, borderRadius:10, marginBottom:7, alignItems:'flex-start' }}>
+                  <span style={{ fontSize:'.9rem', flexShrink:0, marginTop:1 }}>{issue.type==='error'?'❌':issue.type==='warning'?'⚠️':'ℹ️'}</span>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:4, flexWrap:'wrap' }}>
+                      <span style={{ padding:'2px 7px', borderRadius:4, background:`${ic}20`, color:ic, fontSize:'.68rem', fontWeight:800 }}>
+                        {issue.type?.toUpperCase()}
+                      </span>
+                      {issue.line && (
+                        <span style={{ padding:'2px 7px', borderRadius:4, background:'rgba(148,163,184,0.1)', color:'#94a3b8', fontSize:'.68rem', fontWeight:700 }}>
+                          Line {issue.line}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize:'.85rem', color:'#f1f5f9', fontWeight:600, lineHeight:1.55 }}>{issue.msg}</div>
+                    {issue.fix && (
+                      <div style={{ marginTop:6, padding:'6px 9px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.15)', borderRadius:7, fontSize:'.78rem', color:'#86efac', lineHeight:1.6 }}>
+                        💡 Fix: {issue.fix}
+                      </div>
+                    )}
+                    {/* Show the actual bad line from code */}
+                    {issue.line && code && (
+                      <div style={{ marginTop:6 }}>
+                        {(() => {
+                          const lines = code.split('\n');
+                          const lineNum = parseInt(issue.line);
+                          if (!isNaN(lineNum) && lines[lineNum-1]) {
+                            return (
+                              <div style={{ padding:'6px 9px', background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.12)', borderRadius:7, fontFamily:'monospace', fontSize:'.75rem', color:'#fca5a5' }}>
+                                <span style={{ opacity:.5, marginRight:8 }}>{lineNum}</span>
+                                {lines[lineNum-1]}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -162,67 +210,145 @@ function DebugPanel({ result, loading }) {
         {/* ── Hints ── */}
         {result.hints?.length > 0 && (
           <div>
-            <div style={{ fontSize:'.72rem', fontWeight:800, color:'#3d4e6b', marginBottom:8, letterSpacing:'.05em' }}>💡 ACTIONABLE HINTS</div>
-            {result.hints.map((hint, i) => (
-              <div key={i} style={{ display:'flex', gap:9, padding:'9px 12px', background:'rgba(83,22,151,0.04)', border:'1px solid rgba(83,22,151,0.1)', borderRadius:9, marginBottom:6, alignItems:'flex-start' }}>
-                <span style={{ flexShrink:0, fontSize:'.85rem' }}>💡</span>
-                <span style={{ fontSize:'.83rem', color:'#3d4e6b', lineHeight:1.6 }}>{hint}</span>
-              </div>
-            ))}
+            <div style={{ fontSize:'.7rem', fontWeight:800, color:'#94a3b8', marginBottom:8, letterSpacing:'.06em' }}>💡 ACTIONABLE HINTS</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {result.hints.map((hint, i) => (
+                <div key={i} style={{ display:'flex', gap:9, padding:'10px 13px', background:'rgba(83,22,151,0.08)', border:'1px solid rgba(83,22,151,0.18)', borderRadius:10, alignItems:'flex-start' }}>
+                  <span style={{ flexShrink:0, fontSize:'.85rem', marginTop:1 }}>💡</span>
+                  <span style={{ fontSize:'.84rem', color:'#e2e8f0', lineHeight:1.65 }}>{hint}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* ── Test Results ── */}
-        {result.testResults?.length > 0 && (
+        {/* ── Test case results with trace ── */}
+        {total > 0 && (
           <div>
-            <div style={{ fontSize:'.72rem', fontWeight:800, color:'#3d4e6b', marginBottom:8, letterSpacing:'.05em' }}>
-              🧪 TEST CASE RESULTS ({result.testResults.filter(t=>t.passed===true).length}/{result.testResults.length} passed)
+            <div style={{ fontSize:'.7rem', fontWeight:800, color:'#94a3b8', marginBottom:8, letterSpacing:'.06em' }}>
+              🧪 TEST RESULTS — {passed}/{total} PASSED
             </div>
-            {result.testResults.map((tc, i) => (
-              <div key={i} style={{ padding:'10px 12px', background:'#fafbff', border:`1.5px solid ${tc.passed===true?'rgba(71,211,114,0.3)':tc.passed===false?'rgba(239,68,68,0.25)':'#e8edf5'}`, borderRadius:10, marginBottom:7 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-                  <span style={{ fontWeight:800, fontSize:'.8rem', color:'#3d4e6b' }}>Test Case {i+1}</span>
-                  <span style={{ padding:'2px 10px', borderRadius:999, background:tc.passed===true?'rgba(71,211,114,0.12)':tc.passed===false?'rgba(239,68,68,0.1)':'rgba(245,158,11,0.1)', color:tc.passed===true?'#166534':tc.passed===false?'#991b1b':'#92400e', fontWeight:800, fontSize:'.7rem' }}>
-                    {tc.passed===true?'✅ PASS':tc.passed===false?'❌ FAIL':'⚠️ UNCERTAIN'}
-                  </span>
+            {/* Mini progress bar */}
+            <div style={{ height:6, background:'rgba(255,255,255,0.08)', borderRadius:999, marginBottom:10, overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${total?Math.round(passed/total*100):0}%`, background:passed===total?'linear-gradient(90deg,#4ade80,#22d3ee)':'linear-gradient(90deg,#f87171,#fbbf24)', borderRadius:999, transition:'width .6s' }} />
+            </div>
+            {result.testResults.map((tc, i) => {
+              const isOpen = expandTC[i];
+              const passClr = tc.passed===true?'#4ade80':tc.passed===false?'#f87171':'#fbbf24';
+              const passBg  = tc.passed===true?'rgba(74,222,128,0.06)':tc.passed===false?'rgba(248,113,113,0.06)':'rgba(251,191,36,0.06)';
+              const passBrd = tc.passed===true?'rgba(74,222,128,0.25)':tc.passed===false?'rgba(248,113,113,0.2)':'rgba(251,191,36,0.2)';
+              return (
+                <div key={i} style={{ background:passBg, border:`1.5px solid ${passBrd}`, borderRadius:11, marginBottom:8, overflow:'hidden' }}>
+                  <button onClick={()=>setExpandTC(e=>({...e,[i]:!e[i]}))}
+                    style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 13px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif" }}>
+                    <span style={{ fontSize:'1rem', flexShrink:0 }}>{tc.passed===true?'✅':tc.passed===false?'❌':'⚠️'}</span>
+                    <span style={{ fontWeight:700, fontSize:'.82rem', color:'#f1f5f9', flex:1 }}>Test Case {i+1}</span>
+                    {tc.input !== undefined && (
+                      <span style={{ fontSize:'.72rem', color:'#94a3b8', marginRight:4 }}>Input: <code style={{ color:'#e2e8f0' }}>{String(tc.input).slice(0,30)}{String(tc.input).length>30?'…':''}</code></span>
+                    )}
+                    <span style={{ padding:'2px 8px', borderRadius:999, background:`${passClr}20`, color:passClr, fontSize:'.68rem', fontWeight:800 }}>
+                      {tc.passed===true?'PASS':tc.passed===false?'FAIL':'UNCERTAIN'}
+                    </span>
+                    <span style={{ color:'#64748b', fontSize:'.7rem', marginLeft:4 }}>{isOpen?'▲':'▼'}</span>
+                  </button>
+                  {isOpen && (
+                    <div style={{ padding:'0 13px 12px', display:'flex', flexDirection:'column', gap:8, borderTop:`1px solid ${passBrd}` }}>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:10 }}>
+                        <div style={{ padding:'8px 10px', background:'rgba(255,255,255,0.04)', borderRadius:8 }}>
+                          <div style={{ fontSize:'.65rem', color:'#64748b', fontWeight:700, marginBottom:4 }}>INPUT</div>
+                          <code style={{ fontSize:'.78rem', color:'#94a3b8', wordBreak:'break-all' }}>{String(tc.input)}</code>
+                        </div>
+                        <div style={{ padding:'8px 10px', background:'rgba(74,222,128,0.06)', borderRadius:8 }}>
+                          <div style={{ fontSize:'.65rem', color:'#64748b', fontWeight:700, marginBottom:4 }}>EXPECTED</div>
+                          <code style={{ fontSize:'.78rem', color:'#86efac', wordBreak:'break-all' }}>{String(tc.expected)}</code>
+                        </div>
+                        {tc.actualOutput !== undefined && (
+                          <div style={{ padding:'8px 10px', background: tc.passed===false?'rgba(248,113,113,0.06)':'rgba(255,255,255,0.04)', borderRadius:8, gridColumn:tc.passed!==true?'auto':'1/-1' }}>
+                            <div style={{ fontSize:'.65rem', color:'#64748b', fontWeight:700, marginBottom:4 }}>YOUR OUTPUT</div>
+                            <code style={{ fontSize:'.78rem', color: tc.passed===false?'#fca5a5':'#94a3b8', wordBreak:'break-all' }}>{String(tc.actualOutput)}</code>
+                          </div>
+                        )}
+                      </div>
+                      {/* Step trace */}
+                      {tc.trace && (
+                        <div style={{ padding:'10px 12px', background:'rgba(83,22,151,0.08)', border:'1px solid rgba(83,22,151,0.15)', borderRadius:9 }}>
+                          <div style={{ fontSize:'.65rem', fontWeight:800, color:'#a78bfa', marginBottom:6, letterSpacing:'.06em' }}>📋 EXECUTION TRACE</div>
+                          <div style={{ fontSize:'.77rem', color:'#94a3b8', lineHeight:1.8, whiteSpace:'pre-wrap', fontFamily:'monospace' }}>{tc.trace}</div>
+                        </div>
+                      )}
+                      {/* Wrong answer diff */}
+                      {tc.passed===false && tc.expected !== undefined && tc.actualOutput !== undefined && (
+                        <div style={{ padding:'8px 12px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:9 }}>
+                          <div style={{ fontSize:'.72rem', color:'#f87171', fontWeight:700 }}>
+                            ⚡ Your output <code>{String(tc.actualOutput)}</code> doesn't match expected <code>{String(tc.expected)}</code>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div style={{ display:'grid', gap:4, fontSize:'.78rem' }}>
-                  <div><span style={{ color:'#b0bec9', fontWeight:700 }}>Input:</span> <code style={{ color:'#0f1a2e', background:'rgba(4,44,93,0.05)', padding:'1px 5px', borderRadius:4 }}>{String(tc.input)}</code></div>
-                  <div><span style={{ color:'#b0bec9', fontWeight:700 }}>Expected:</span> <code style={{ color:'#166534', background:'rgba(71,211,114,0.08)', padding:'1px 5px', borderRadius:4 }}>{String(tc.expected)}</code></div>
-                  {tc.actualOutput && <div><span style={{ color:'#b0bec9', fontWeight:700 }}>Got:</span> <code style={{ color: tc.passed===false?'#991b1b':'#0f1a2e', background: tc.passed===false?'rgba(239,68,68,0.07)':'rgba(4,44,93,0.05)', padding:'1px 5px', borderRadius:4 }}>{String(tc.actualOutput)}</code></div>}
-                  {tc.trace && <div style={{ marginTop:4, padding:'6px 8px', background:'rgba(83,22,151,0.04)', borderRadius:6, color:'#7a8ba8', fontSize:'.72rem', lineHeight:1.6 }}><span style={{ fontWeight:700, color:'#531697' }}>Trace:</span> {tc.trace}</div>}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* ── Suggested Fix ── */}
-        {result.suggestedFix && result.suggestedFix.length > 5 && (
+        {result.suggestedFix && result.suggestedFix.trim().length > 5 && (
           <div>
             <button onClick={()=>setShowFix(f=>!f)}
-              style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:'1.5px solid rgba(71,211,114,0.3)', background:showFix?'rgba(71,211,114,0.08)':'transparent', color:'#166534', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.83rem', textAlign:'left', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span>🔧 {showFix ? 'Hide' : 'Show'} Suggested Fix</span>
+              style={{ width:'100%', padding:'10px 14px', borderRadius:10, border:'1.5px solid rgba(74,222,128,0.3)', background:showFix?'rgba(74,222,128,0.08)':'transparent', color:'#4ade80', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.83rem', textAlign:'left', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <span>🔧 {showFix ? 'Hide' : 'View'} Suggested Fix</span>
               <span style={{ fontSize:'.7rem' }}>{showFix?'▲':'▼'}</span>
             </button>
             {showFix && (
-              <div style={{ marginTop:6, padding:'12px 14px', background:'rgba(71,211,114,0.05)', border:'1px solid rgba(71,211,114,0.2)', borderRadius:10, fontSize:'.82rem', color:'#3d4e6b', lineHeight:1.8, whiteSpace:'pre-wrap', fontFamily:'monospace' }}>
-                {result.suggestedFix}
+              <div style={{ marginTop:6, borderRadius:10, overflow:'hidden', border:'1px solid rgba(74,222,128,0.2)' }}>
+                {/* Toolbar */}
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px', background:'rgba(15,23,42,0.9)', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ fontSize:'.72rem', color:'#64748b', fontWeight:700 }}>✅ Fixed Code</span>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button onClick={copyFix}
+                      style={{ padding:'4px 10px', borderRadius:6, border:'1px solid rgba(74,222,128,0.25)', background:'rgba(74,222,128,0.08)', color:'#4ade80', fontSize:'.72rem', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>
+                      {copiedFix?'✅ Copied!':'📋 Copy'}
+                    </button>
+                    {onApplyFix && (
+                      <button onClick={()=>onApplyFix(result.suggestedFix)}
+                        style={{ padding:'4px 10px', borderRadius:6, border:'1px solid rgba(83,22,151,0.3)', background:'rgba(83,22,151,0.12)', color:'#a78bfa', fontSize:'.72rem', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>
+                        ⬆️ Apply to Editor
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <pre style={{ margin:0, padding:'14px 16px', background:'#060d1a', fontSize:'.8rem', color:'#e2e8f0', overflowX:'auto', lineHeight:1.75, maxHeight:360, fontFamily:'JetBrains Mono,monospace', whiteSpace:'pre-wrap', wordBreak:'break-word' }}>
+                  {result.suggestedFix}
+                </pre>
               </div>
             )}
           </div>
         )}
 
-        {/* ── Clean state ── */}
-        {!result.issues?.length && !result.hints?.length && !result.explanation && (
-          <div style={{ textAlign:'center', padding:'12px 0', color:'#b0bec9', fontSize:'.83rem' }}>✅ No issues detected — code looks clean!</div>
+        {/* ── Success state ── */}
+        {v === 'likely_correct' && (
+          <div style={{ padding:'14px 16px', background:'rgba(74,222,128,0.07)', border:'1px solid rgba(74,222,128,0.2)', borderRadius:12, textAlign:'center' }}>
+            <div style={{ fontSize:'1.5rem', marginBottom:6 }}>🎉</div>
+            <div style={{ fontWeight:800, fontSize:'.9rem', color:'#4ade80', fontFamily:"'Syne',sans-serif" }}>Code looks correct!</div>
+            <div style={{ fontSize:'.77rem', color:'#86efac', marginTop:4, lineHeight:1.6 }}>All test cases passed. You can safely submit your solution.</div>
+          </div>
+        )}
+
+        {/* ── Error summary block if errors and no explanation ── */}
+        {v === 'has_errors' && !result.explanation && (
+          <div style={{ padding:'12px 14px', background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:11 }}>
+            <div style={{ fontSize:'.82rem', color:'#fca5a5', lineHeight:1.7 }}>
+              Your code has {result.issues?.length || 'some'} issue{result.issues?.length!==1?'s':''} that need fixing before submission. Review the issues above and apply the suggested fix.
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-/* ── Problem Card (with Debug Agent) ────────────────────────────── */
+/* ── Problem Card (with integrated Debug + Smart Submit) ─────────── */
 function ProblemCard({ problem, userProblem, onSolve, onShuffle, solving, shuffling }) {
   const [showSolve, setShowSolve] = useState(false);
   const [code, setCode]           = useState('');
@@ -232,6 +358,7 @@ function ProblemCard({ problem, userProblem, onSolve, onShuffle, solving, shuffl
   const [lang, setLang]           = useState('javascript');
   const [debugResult, setDebugResult] = useState(null);
   const [debugging, setDebugging]     = useState(false);
+  const [submitMode, setSubmitMode]   = useState('idle'); // idle | analysing | error_found | ready | submitting
   const isSolved   = userProblem?.status === 'solved';
   const isShuffled = userProblem?.shuffled;
   const diff = DIFF[problem.difficulty] || DIFF.Easy;
@@ -242,24 +369,47 @@ function ProblemCard({ problem, userProblem, onSolve, onShuffle, solving, shuffl
     if (userProblem?.status==='assigned') fetch(`${API}/problems/${problem._id}/attempt`, { method:'POST', headers:tk() }).catch(()=>{});
   }
 
-  function handleSubmit() {
-    if (!code.trim() || code.trim().length < 10) { setErr('⚠️ Paste your solution code (minimum 10 characters) before submitting.'); return; }
-    setErr(''); onSolve(problem._id, notes, code, rating);
-  }
-
+  // Separate debug (manual)
   async function handleDebug() {
-    if (!code.trim() || code.trim().length < 5) { setErr('⚠️ Paste some code first to debug.'); return; }
-    setErr(''); setDebugging(true); setDebugResult(null);
+    if (!code.trim() || code.trim().length < 5) { setErr('⚠️ Paste some code first.'); return; }
+    setErr(''); setDebugging(true); setDebugResult(null); setSubmitMode('idle');
     try {
       const res = await fetch(`${API}/debug`, {
         method:'POST', headers:tks(),
-        body: JSON.stringify({ code, language:lang, problemTitle: problem.title, testCases: problem.testCases || [] })
+        body: JSON.stringify({ code, language:lang, problemTitle:problem.title, testCases:problem.testCases||[] }),
       });
       const d = await res.json();
       setDebugResult(d);
-    } catch(e) {
-      setDebugResult({ verdict:'review', verdictMessage:'Could not reach debug service. Check your connection.', issues:[], hints:[], testResults:[] });
+    } catch {
+      setDebugResult({ verdict:'review', verdictMessage:'Debug service unavailable.', issues:[], hints:[], testResults:[] });
     } finally { setDebugging(false); }
+  }
+
+  // Smart submit: auto-debug first, then decide
+  async function handleSmartSubmit() {
+    if (!code.trim() || code.trim().length < 10) { setErr('⚠️ Paste your solution code before submitting.'); return; }
+    setErr(''); setSubmitMode('analysing'); setDebugging(true); setDebugResult(null);
+    try {
+      const res = await fetch(`${API}/debug`, {
+        method:'POST', headers:tks(),
+        body: JSON.stringify({ code, language:lang, problemTitle:problem.title, testCases:problem.testCases||[] }),
+      });
+      const d = await res.json();
+      setDebugResult(d);
+      if (d.verdict === 'has_errors') {
+        setSubmitMode('error_found');
+      } else {
+        setSubmitMode('ready');
+      }
+    } catch {
+      setDebugResult({ verdict:'review', verdictMessage:'Debug service unavailable — proceeding.', issues:[], hints:[], testResults:[] });
+      setSubmitMode('ready');
+    } finally { setDebugging(false); }
+  }
+
+  function handleForceSubmit() {
+    setSubmitMode('submitting');
+    onSolve(problem._id, notes, code, rating);
   }
 
   return (
@@ -290,7 +440,7 @@ function ProblemCard({ problem, userProblem, onSolve, onShuffle, solving, shuffl
             </button>
           )}
           {!isSolved && (
-            <button onClick={()=>setShowSolve(s=>!s)}
+            <button onClick={()=>{ setShowSolve(s=>!s); setDebugResult(null); setSubmitMode('idle'); }}
               style={{ padding:'8px 14px', borderRadius:9, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'.78rem', fontFamily:"'Nunito',sans-serif" }}>
               {showSolve?'Cancel':'✓ Submit'}
             </button>
@@ -308,7 +458,7 @@ function ProblemCard({ problem, userProblem, onSolve, onShuffle, solving, shuffl
       {showSolve && !isSolved && (
         <div style={{ marginTop:16, paddingTop:16, borderTop:'1px solid #e8edf5' }}>
 
-          {/* Language selector */}
+          {/* Language */}
           <div style={{ marginBottom:12 }}>
             <label style={{ fontSize:'.75rem', fontWeight:800, color:'#3d4e6b', fontFamily:"'Syne',sans-serif", display:'block', marginBottom:5 }}>Language</label>
             <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
@@ -327,60 +477,122 @@ function ProblemCard({ problem, userProblem, onSolve, onShuffle, solving, shuffl
               <label style={{ fontSize:'.78rem', fontWeight:800, color:'#ef4444', fontFamily:"'Syne',sans-serif" }}>
                 Solution Code <span style={{ color:'#b0bec9', fontWeight:500 }}>(required)</span>
               </label>
-              <VoiceButton onResult={v=>setCode(p=>p+' '+v)} />
+              <div style={{ display:'flex', gap:7, alignItems:'center' }}>
+                <VoiceButton onResult={v=>setCode(p=>p+' '+v)} />
+                {code.trim().length > 10 && (
+                  <button onClick={handleDebug} disabled={debugging}
+                    style={{ padding:'5px 11px', borderRadius:7, border:'1.5px solid rgba(83,22,151,0.25)', background:'rgba(83,22,151,0.06)', color:'#531697', fontWeight:700, cursor:debugging?'not-allowed':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.72rem', display:'flex', alignItems:'center', gap:5 }}>
+                    {debugging?'🔄':'🔍'} {debugging?'Checking…':'Quick Debug'}
+                  </button>
+                )}
+              </div>
             </div>
-            <textarea value={code} onChange={e=>setCode(e.target.value)} rows={10}
-              placeholder={`// Write your ${lang} solution here…\n// Example:\nfunction solution(input) {\n    // your logic\n    return result;\n}`}
-              style={{ width:'100%', padding:'12px 14px', borderRadius:10, border:`1.5px solid ${err&&!code.trim()?'#ef4444':'#d0d7e8'}`, fontFamily:'JetBrains Mono, monospace', fontSize:'.82rem', resize:'vertical', outline:'none', background:'#0f172a', color:'#e2e8f0', lineHeight:1.7, boxSizing:'border-box' }} />
-          </div>
-
-          {/* Debug Agent button */}
-          <div style={{ marginBottom:14 }}>
-            <button onClick={handleDebug} disabled={debugging || !code.trim()}
-              style={{ padding:'9px 20px', borderRadius:9, border:'none', background:debugging||!code.trim()?'#d0d7e8':'linear-gradient(135deg,#1e1b4b,#531697)', color:'#fff', fontWeight:700, cursor:debugging||!code.trim()?'not-allowed':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.83rem', display:'flex', alignItems:'center', gap:8 }}>
-              🤖 {debugging ? 'Analysing…' : 'Debug & Analyse Code'}
-            </button>
-            <div style={{ fontSize:'.68rem', color:'#b0bec9', marginTop:4 }}>Checks for errors, off-by-one issues, complexity hints and more</div>
-          </div>
-
-          {/* Debug Result */}
-          <DebugPanel result={debugResult} loading={debugging} />
-
-          {/* Approach notes */}
-          <div style={{ marginBottom:14, marginTop: debugResult ? 14 : 0 }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-              <label style={{ fontSize:'.78rem', fontWeight:700, color:'#3d4e6b', fontFamily:"'Syne',sans-serif" }}>Approach Notes <span style={{ fontWeight:500, color:'#b0bec9' }}>(optional)</span></label>
-              <VoiceButton onResult={v=>setNotes(p=>p+' '+v)} />
-            </div>
-            <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={2}
-              placeholder="Describe your approach, time/space complexity, what you learnt…"
-              style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.85rem', resize:'vertical', outline:'none', boxSizing:'border-box' }} />
-          </div>
-
-          {/* Self rating */}
-          <div style={{ marginBottom:14 }}>
-            <label style={{ display:'block', fontSize:'.78rem', fontWeight:700, color:'#3d4e6b', marginBottom:8, fontFamily:"'Syne',sans-serif" }}>How did you do? <span style={{ fontWeight:500, color:'#b0bec9' }}>(optional)</span></label>
-            <div style={{ display:'flex', gap:7 }}>
-              {[1,2,3,4,5].map(r => (
-                <button key={r} onClick={()=>setRating(r)} type="button"
-                  style={{ padding:'6px 14px', borderRadius:8, border:`1.5px solid ${rating>=r?'#f59e0b':'#d0d7e8'}`, background:rating>=r?'rgba(245,158,11,0.1)':'transparent', color:rating>=r?'#92400e':'#b0bec9', fontWeight:700, cursor:'pointer', fontSize:'.85rem' }}>
-                  {'⭐'.repeat(r)}
-                </button>
-              ))}
+            <div style={{ position:'relative', borderRadius:12, overflow:'hidden', border:'1.5px solid #334155' }}>
+              {/* Editor header bar */}
+              <div style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', background:'#1e293b', borderBottom:'1px solid #334155' }}>
+                <div style={{ width:10, height:10, borderRadius:'50%', background:'#ef4444' }} />
+                <div style={{ width:10, height:10, borderRadius:'50%', background:'#f59e0b' }} />
+                <div style={{ width:10, height:10, borderRadius:'50%', background:'#22c55e' }} />
+                <span style={{ marginLeft:8, fontSize:'.68rem', color:'#64748b', fontFamily:'monospace' }}>{lang} — solution.{lang==='python'?'py':lang==='javascript'?'js':lang==='java'?'java':lang==='c++'?'cpp':'c'}</span>
+                {code.trim() && (
+                  <span style={{ marginLeft:'auto', fontSize:'.65rem', color:'#64748b' }}>{code.split('\n').length} lines · {code.length} chars</span>
+                )}
+              </div>
+              <textarea value={code} onChange={e=>{ setCode(e.target.value); setSubmitMode('idle'); setDebugResult(null); }} rows={12}
+                placeholder={`// Write your ${lang} solution here…\n// The AI debugger will check your code before submission\n\nfunction solution(input) {\n    // your logic\n    return result;\n}`}
+                style={{ width:'100%', padding:'14px 16px', border:'none', fontFamily:'JetBrains Mono, Consolas, monospace', fontSize:'.83rem', resize:'vertical', outline:'none', background:'#0f172a', color:'#e2e8f0', lineHeight:1.8, boxSizing:'border-box', display:'block', minHeight:220 }} />
             </div>
           </div>
 
-          {err && <div style={{ padding:'9px 12px', background:'#fee2e2', color:'#991b1b', borderRadius:8, fontSize:'.82rem', fontWeight:600, marginBottom:12 }}>{err}</div>}
+          {/* Debug Result Panel */}
+          <DebugPanel result={debugResult} loading={debugging} code={code} onApplyFix={fixed=>{ setCode(fixed); setDebugResult(null); setSubmitMode('idle'); }} />
 
-          <button onClick={handleSubmit} disabled={solving}
-            style={{ padding:'12px 28px', borderRadius:10, border:'none', background:solving?'#d0d7e8':'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:solving?'not-allowed':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.9rem' }}>
-            {solving ? '⏳ Saving…' : '🎉 Submit Solution & Earn Streak'}
-          </button>
+          {/* Submit area */}
+          <div style={{ marginTop:16, paddingTop:16, borderTop:'1px solid #e8edf5' }}>
+
+            {/* Approach notes */}
+            <div style={{ marginBottom:14 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                <label style={{ fontSize:'.78rem', fontWeight:700, color:'#3d4e6b', fontFamily:"'Syne',sans-serif" }}>Approach Notes <span style={{ fontWeight:500, color:'#b0bec9' }}>(optional)</span></label>
+                <VoiceButton onResult={v=>setNotes(p=>p+' '+v)} />
+              </div>
+              <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={2}
+                placeholder="Describe your approach, time/space complexity, what you learnt…"
+                style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.85rem', resize:'vertical', outline:'none', boxSizing:'border-box' }} />
+            </div>
+
+            {/* Self rating */}
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:'.78rem', fontWeight:700, color:'#3d4e6b', marginBottom:8, fontFamily:"'Syne',sans-serif" }}>How did you do? <span style={{ fontWeight:500, color:'#b0bec9' }}>(optional)</span></label>
+              <div style={{ display:'flex', gap:7 }}>
+                {[1,2,3,4,5].map(r => (
+                  <button key={r} onClick={()=>setRating(r)} type="button"
+                    style={{ padding:'6px 14px', borderRadius:8, border:`1.5px solid ${rating>=r?'#f59e0b':'#d0d7e8'}`, background:rating>=r?'rgba(245,158,11,0.1)':'transparent', color:rating>=r?'#92400e':'#b0bec9', fontWeight:700, cursor:'pointer', fontSize:'.85rem' }}>
+                    {'⭐'.repeat(r)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {err && <div style={{ padding:'9px 12px', background:'#fee2e2', color:'#991b1b', borderRadius:8, fontSize:'.82rem', fontWeight:600, marginBottom:12 }}>{err}</div>}
+
+            {/* Smart submit flow */}
+            <div>
+              {/* Idle — show Analyse & Submit button */}
+              {(submitMode === 'idle' || submitMode === 'ready') && (
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
+                  {submitMode === 'idle' ? (
+                    <button onClick={handleSmartSubmit} disabled={!code.trim() || code.trim().length < 10}
+                      style={{ padding:'12px 28px', borderRadius:10, border:'none', background:!code.trim()?'#d0d7e8':'linear-gradient(135deg,#1e1b4b,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:!code.trim()?'not-allowed':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.9rem', display:'flex', alignItems:'center', gap:8, boxShadow:code.trim()?'0 4px 15px rgba(83,22,151,0.3)':'none' }}>
+                      🔍 Analyse & Submit
+                    </button>
+                  ) : (
+                    <button onClick={handleForceSubmit} disabled={solving}
+                      style={{ padding:'12px 28px', borderRadius:10, border:'none', background:solving?'#d0d7e8':'linear-gradient(135deg,#166534,#22c55e)', color:'#fff', fontWeight:800, cursor:solving?'not-allowed':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.9rem', display:'flex', alignItems:'center', gap:8, boxShadow:'0 4px 15px rgba(34,197,94,0.3)' }}>
+                      🎉 {solving?'Saving…':'Confirm & Earn Streak!'}
+                    </button>
+                  )}
+                  <span style={{ fontSize:'.72rem', color:'#b0bec9' }}>
+                    {submitMode==='idle'?'AI will check your code first':'✅ Code looks good — confirm submission'}
+                  </span>
+                </div>
+              )}
+
+              {/* Analysing */}
+              {submitMode === 'analysing' && (
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', background:'rgba(83,22,151,0.05)', borderRadius:10 }}>
+                  <div style={{ width:20, height:20, border:'2.5px solid #d0d7e8', borderTopColor:'#531697', borderRadius:'50%', animation:'_spin .7s linear infinite', flexShrink:0 }} />
+                  <span style={{ fontSize:'.85rem', color:'#531697', fontWeight:700 }}>Analysing your code before submission…</span>
+                </div>
+              )}
+
+              {/* Error found — show warning + override */}
+              {submitMode === 'error_found' && (
+                <div style={{ background:'rgba(239,68,68,0.04)', border:'1.5px solid rgba(239,68,68,0.2)', borderRadius:12, padding:'14px 16px' }}>
+                  <div style={{ fontWeight:800, fontSize:'.88rem', color:'#ef4444', marginBottom:6 }}>❌ AI found errors in your code</div>
+                  <div style={{ fontSize:'.8rem', color:'#7a8ba8', marginBottom:12, lineHeight:1.65 }}>
+                    The debug report above shows the issues. We recommend fixing them before submitting.
+                  </div>
+                  <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                    <button onClick={()=>setSubmitMode('idle')}
+                      style={{ padding:'9px 18px', borderRadius:9, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.83rem' }}>
+                      ✏️ Fix & Re-Analyse
+                    </button>
+                    <button onClick={handleForceSubmit} disabled={solving}
+                      style={{ padding:'9px 18px', borderRadius:9, border:'1.5px solid rgba(239,68,68,0.3)', background:'transparent', color:'#ef4444', fontWeight:700, cursor:solving?'not-allowed':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.83rem' }}>
+                      {solving?'Saving…':'Submit Anyway'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
 
 /* ── History Card ────────────────────────────────────────────────── */
 function HistoryCard({ item }) {
@@ -516,7 +728,7 @@ function AllProblemsTab() {
                   style={{ padding:'8px 18px', borderRadius:9, border:'none', background:debugging[p._id]||!(userCode[p._id]||'').trim()?'#d0d7e8':'linear-gradient(135deg,#1e1b4b,#531697)', color:'#fff', fontWeight:700, cursor:debugging[p._id]||!(userCode[p._id]||'').trim()?'not-allowed':'pointer', fontSize:'.8rem', fontFamily:"'Nunito',sans-serif" }}>
                   {debugging[p._id]?'Analysing…':'🤖 Debug & Analyse'}
                 </button>
-                <DebugPanel result={debugResult[p._id]} loading={debugging[p._id]} />
+                <DebugPanel result={debugResult[p._id]} loading={debugging[p._id]} code={userCode[p._id]||''} onApplyFix={fixed=>setUserCode(prev=>({...prev,[p._id]:fixed}))} />
               </div>
             )}
           </div>
