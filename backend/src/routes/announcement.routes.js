@@ -4,7 +4,7 @@ const User = require('../models/User.model');
 const { authenticate, authorize } = require('../middleware/auth.middleware');
 
 // GET /api/announcements
-router.get('/', authenticate, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const u = req.user;
     const filter = {
