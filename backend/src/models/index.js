@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 
 // ─── Company ─────────────────────────────────────────────────────────────────
@@ -22,6 +23,9 @@ const companySchema = new mongoose.Schema({
   jdText: { type: String },
   prepTips: { type: String },
   tags: [String],
+  logoUrl: { type: String }, // direct logo URL
+  glassdoorUrl: { type: String }, // optional Glassdoor link
+  pinnedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // bookmarked users
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -27,20 +27,18 @@ const app = express();
 app.use(helmet());
 
 // ── Rate limiting ──────────────────────────────────────────────────────────
-// 500 requests per 15 minutes — generous enough for dashboard polling
-// Auth routes (login/register) get their own tighter limit to prevent brute-force
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  max: 500,                   // 500 req/15min per IP (was 100 — too tight, caused login lockout)
+  windowMs: 15 * 60 * 1000,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please wait a few minutes and try again.' },
-  skip: (req) => req.path === '/health',  // never limit health check
+  skip: (req) => req.path === '/health',
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30,  // 30 login attempts per 15 min per IP (brute-force protection)
+  max: 30,
   standardHeaders: true,
   message: { error: 'Too many login attempts. Please wait 15 minutes.' },
 });
