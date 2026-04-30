@@ -8,6 +8,12 @@
  * Field: companies (array) matches AptitudeQuestion schema
  */
 
+require('dotenv').config();
+const mongoose = require('mongoose');
+const { AptitudeQuestion } = require('../models'); 
+
+console.log("🚀 Script started");
+
 const Q = [
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -2144,4 +2150,31 @@ const Q = [
 
 ];
 
-module.exports = Q;
+async function seed() {
+  console.log("🚀 Seeding started");
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI not found");
+  }
+
+  await mongoose.connect(uri);
+  console.log("✅ Connected to MongoDB");
+
+  await AptitudeQuestion.deleteMany({});
+  console.log("🧹 Old aptitude questions deleted");
+
+  await AptitudeQuestion.insertMany(Q);
+  console.log(`✅ ${Q.length} questions inserted`);
+}
+
+
+seed()
+  .then(() => {
+    console.log("🌱 Aptitude Seeding completed");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("❌ Seeding error:", err);
+    process.exit(1);
+  });
