@@ -20,7 +20,7 @@ async function seed() {
   const companies = [
     {
       name: "TCS",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/b/b1/Tata_Consultancy_Services_Logo.svg",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Tata_Consultancy_Services_old_logo.svg/1280px-Tata_Consultancy_Services_old_logo.svg.png",
       sector: "IT Services",
       website: "https://tcs.com",
       status: "visited",
@@ -104,7 +104,7 @@ async function seed() {
     },
     {
       name: "Cognizant",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/3/37/Cognizant_logo.svg",
+      logoUrl: "https://cdn.worldvectorlogo.com/logos/cognizant-3.svg",
       sector: "IT Services",
       website: "https://cognizant.com",
       status: "visited",
@@ -132,7 +132,7 @@ async function seed() {
     },
     {
       name: "Capgemini",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/a/a6/Capgemini_201x_logo.svg",
+      logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqz2rnBhUydI2Yd47HawYx8kOaboS3DPROGA&s",
       sector: "IT Consulting",
       website: "https://capgemini.com",
       status: "visited",
@@ -187,7 +187,7 @@ async function seed() {
     },
     {
       name: "Persistent Systems",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/6/65/Persistent_Systems_logo.svg",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Persistent_Systems_Logo.svg/3840px-Persistent_Systems_Logo.svg.png",
       sector: "Product Engineering",
       website: "https://persistent.com",
       status: "upcoming",
@@ -214,7 +214,7 @@ async function seed() {
     },
     {
       name: "Tech Mahindra",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/e/e9/Tech_Mahindra_New_Logo.svg",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Tech_Mahindra_New_Logo.svg/1280px-Tech_Mahindra_New_Logo.svg.png",
       sector: "IT Services & Telecom",
       website: "https://techmahindra.com",
       status: "upcoming",
@@ -241,7 +241,7 @@ async function seed() {
     },
     {
       name: "Hexaware Technologies",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Hexaware_new_logo.svg/320px-Hexaware_new_logo.svg.png",
+      logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl8dEmVFq3o0S0CK6YsJqRZtnTmtoq6Si-yQ&s",
       sector: "IT Services & BPO",
       website: "https://hexaware.com",
       status: "upcoming",
@@ -268,7 +268,7 @@ async function seed() {
     },
     {
       name: "Amdocs",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Amdocs-logo.svg/320px-Amdocs-logo.svg.png",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Amdocs-2017-brand-mark.svg/1280px-Amdocs-2017-brand-mark.svg.png",
       sector: "Telecom IT Solutions",
       website: "https://amdocs.com",
       status: "upcoming",
@@ -376,7 +376,7 @@ async function seed() {
     },
     {
       name: "KPIT Technologies",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/KPIT_Technologies_logo.svg/320px-KPIT_Technologies_logo.svg.png",
+      logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRO_SAOJLqLvVaqZmX3hKKkq_Hd7ABqZ0cUA&s",
       sector: "Automotive IT & Engineering",
       website: "https://kpit.com",
       status: "expected",
@@ -403,7 +403,7 @@ async function seed() {
     },
     {
       name: "BNY Mellon",
-      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/BNY_Mellon.svg/320px-BNY_Mellon.svg.png",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/BNY_Mellon.svg/1280px-BNY_Mellon.svg.png",
       sector: "Financial Technology",
       website: "https://bnymellon.com",
       status: "expected",
