@@ -23,6 +23,28 @@ const PLATFORMS = [
   { id:'HackerEarth', name:'HackerEarth', emoji:'🌍', color:'#3b82f6', desc:'Hiring contests & practice', url:'https://www.hackerearth.com/practice/', tagline:'Used in campus hiring' },
   { id:'Custom',      name:'PRAGATI Bank',emoji:'🎯', color:'#13a1a5', desc:'Curated by your faculty', url:null, tagline:'Faculty-curated problems' },
 ];
+const COMPANY_COLORS = {
+  Google:'#4285F4', Amazon:'#FF9900', Microsoft:'#00A4EF', Facebook:'#1877F2',
+  Apple:'#555', Uber:'#000', Flipkart:'#2874F0', Adobe:'#FF0000',
+  Infosys:'#007CC3', TCS:'#E40000', Wipro:'#7CBB00', Accenture:'#A100FF',
+  'Goldman Sachs':'#7B8B6F', Bloomberg:'#F03A17', Oracle:'#F80000',
+  Ola:'#E8B84B', Swiggy:'#FC8019', Zomato:'#E23744', Paytm:'#00B9F1',
+  'TCS Digital':'#E40000', 'TCS NQT':'#E40000', Qualcomm:'#3253DC',
+  LinkedIn:'#0077B5', LyFt:'#FF00BF', Airbnb:'#FF5A5F', Pinterest:'#E60023',
+};
+
+/* ── Live Countdown hook (updates every second) ──────────────────── */
+function useCountdown(targetHours) {
+  const [timeLeft, setTimeLeft] = React.useState(targetHours * 3600);
+  React.useEffect(() => {
+    const id = setInterval(() => setTimeLeft(t => Math.max(0, t - 1)), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const h = Math.floor(timeLeft / 3600);
+  const m = Math.floor((timeLeft % 3600) / 60);
+  const s = timeLeft % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
 
 /* ── Platform Selection Popup ────────────────────────────────────── */
 function PlatformPopup({ onSelect }) {
@@ -348,6 +370,12 @@ function DebugPanel({ result, loading, code, onApplyFix }) {
   );
 }
 
+/* ── Countdown Badge ─────────────────────────────────────────────── */
+function CountdownBadge({ hours }) {
+  const label = useCountdown(hours);
+  return <span style={{ fontFamily:'JetBrains Mono, monospace', fontSize:'.82rem' }}>{label}</span>;
+}
+
 /* ── Problem Card (with integrated Debug + Smart Submit) ─────────── */
 function ProblemCard({ problem, userProblem, onSolve, onShuffle, solving, shuffling }) {
   const [showSolve, setShowSolve] = useState(false);
@@ -447,6 +475,35 @@ function ProblemCard({ problem, userProblem, onSolve, onShuffle, solving, shuffl
           )}
         </div>
       </div>
+
+      {/* Description */}
+      {problem.description && (
+        <div style={{ marginTop:10, fontSize:'.78rem', color:'#4a5568', lineHeight:1.6, padding:'8px 12px', background:'rgba(83,22,151,0.04)', borderRadius:8 }}>
+          {problem.description}
+        </div>
+      )}
+
+      {/* Company tags */}
+      {problem.companies && problem.companies.length > 0 && (
+        <div style={{ marginTop:8, display:'flex', flexWrap:'wrap', gap:4 }}>
+          {problem.companies.slice(0,6).map(co => (
+            <span key={co} style={{ padding:'2px 8px', borderRadius:999, fontSize:'.63rem', fontWeight:700,
+              background:`${(COMPANY_COLORS[co]||'#531697')}15`, color:COMPANY_COLORS[co]||'#531697',
+              border:`1px solid ${(COMPANY_COLORS[co]||'#531697')}30` }}>
+              {co}
+            </span>
+          ))}
+          {problem.companies.length > 6 && <span style={{ fontSize:'.63rem', color:'#b0bec9' }}>+{problem.companies.length-6} more</span>}
+        </div>
+      )}
+
+      {/* LeetCode problem number badge */}
+      {problem.problemId && problem.source==='LeetCode' && (
+        <div style={{ marginTop:6, fontSize:'.68rem', color:'#f59e0b', fontWeight:700 }}>
+          LC #{problem.problemId}
+          {problem.constraints && <span style={{ color:'#b0bec9', fontWeight:400, marginLeft:8 }}>Constraints: {problem.constraints}</span>}
+        </div>
+      )}
 
       {isSolved && (
         <div style={{ marginTop:10, fontSize:'.75rem', color:'#7a8ba8', display:'flex', gap:12 }}>
@@ -698,11 +755,19 @@ function AllProblemsTab() {
                   {p.topic && <span style={{ padding:'2px 8px', borderRadius:999, background:'rgba(83,22,151,0.07)', color:'#531697', fontSize:'.68rem', fontWeight:700 }}>{p.topic}</span>}
                   <span style={{ padding:'2px 8px', borderRadius:999, background:dc.bg, color:dc.color, border:`1px solid ${dc.border}`, fontSize:'.68rem', fontWeight:700 }}>{p.difficulty}</span>
                   <span style={{ padding:'2px 8px', borderRadius:999, background:`${sc}15`, color:sc, fontSize:'.68rem', fontWeight:700 }}>{p.source}</span>
+                  {(p.companies||[]).slice(0,3).map(co => (
+                    <span key={co} style={{ padding:'2px 7px', borderRadius:999, fontSize:'.63rem', fontWeight:700,
+                      background:`${(COMPANY_COLORS[co]||'#531697')}12`, color:COMPANY_COLORS[co]||'#531697' }}>
+                      {co}
+                    </span>
+                  ))}
                 </div>
               </div>
               <div style={{ display:'flex', gap:6, flexShrink:0 }}>
                 {p.url && <a href={p.url} target="_blank" rel="noopener noreferrer"
-                  style={{ padding:'6px 12px', borderRadius:8, background:`${sc}15`, color:sc, fontWeight:700, fontSize:'.75rem', textDecoration:'none', border:`1px solid ${sc}30` }}>Solve →</a>}
+                  style={{ padding:'6px 12px', borderRadius:8, background:`${sc}15`, color:sc, fontWeight:700, fontSize:'.75rem', textDecoration:'none', border:`1px solid ${sc}30`, display:'flex', alignItems:'center', gap:4 }}>
+                  {p.source==='LeetCode' && p.problemId ? `LC #${p.problemId} →` : `Solve →`}
+                </a>}
                 <button onClick={()=>setExpanded(isOpen ? null : p._id)}
                   style={{ padding:'6px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', background:isOpen?'rgba(83,22,151,0.06)':'transparent', color:'#531697', fontWeight:700, cursor:'pointer', fontSize:'.75rem', fontFamily:"'Nunito',sans-serif" }}>
                   {isOpen ? '▲ Hide' : '🤖 Try & Debug'}
@@ -884,7 +949,12 @@ export default function ProblemsPage() {
             </div>
           )}
           <div style={{ marginTop:14, padding:'12px 16px', background:'rgba(83,22,151,0.05)', border:'1px solid rgba(83,22,151,0.1)', borderRadius:10, fontSize:'.78rem', color:'#531697', fontWeight:600 }}>
-            💡 Open the problem on {daily?.problem?.source||'LeetCode'} → solve it → paste your code → click <strong>🤖 Debug &amp; Analyse</strong> to check for issues → then submit to earn streak!
+            💡 Open the problem on {daily?.problem?.source||'LeetCode'} → solve it → paste your code → click <strong>🤖 Debug &amp; Analyse</strong> → then submit to earn streak!
+          {daily?.hoursUntilNext > 0 && (
+            <span style={{ marginLeft:12, fontWeight:800, color:'#531697' }}>
+              ⏰ Next problem in: <CountdownBadge hours={daily.hoursUntilNext} />
+            </span>
+          )}
           </div>
         </>
       )}

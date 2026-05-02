@@ -88,7 +88,8 @@ function CompanyCard({ company, onPin, onCompareToggle, compareSelected, onViewD
       <div style={{ display:'flex', alignItems:'center', gap:12, paddingRight:140 }}>
         <div style={{ width:52, height:52, borderRadius:10, border:'1px solid #e8edf5', background:'#f8f9fc', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
           {company.logoUrl
-            ? <img src={company.logoUrl} alt={company.name} style={{ width:'100%', height:'100%', objectFit:'contain', padding:4 }} onError={e=>{e.target.style.display='none';}}/>
+            ? <img src={company.logoUrl} alt={company.name} style={{ width:'100%', height:'100%', objectFit:'contain', padding:4 }}
+                onError={e=>{ e.target.style.display='none'; e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:#531697;background:rgba(83,22,151,0.08);border-radius:10px">${company.name.charAt(0)}</div>`; }}/>
             : <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#531697' }}>{company.name.slice(0,2).toUpperCase()}</span>
           }
         </div>
@@ -296,7 +297,8 @@ function CompanyDetail({ company, onClose, onPin }) {
             <div style={{ display:'flex', gap:14, alignItems:'center' }}>
               {company.logoUrl && (
                 <div style={{ width:56, height:56, background:'#fff', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', padding:6 }}>
-                  <img src={company.logoUrl} alt={company.name} style={{ maxWidth:'100%', maxHeight:'100%', objectFit:'contain' }} onError={e=>e.target.style.display='none'}/>
+                  <img src={company.logoUrl} alt={company.name} style={{ maxWidth:'100%', maxHeight:'100%', objectFit:'contain' }}
+                    onError={e=>{ e.target.style.display='none'; e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;color:#531697">${company.name.charAt(0)}</div>`; }}/>
                 </div>
               )}
               <div>

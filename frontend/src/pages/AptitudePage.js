@@ -218,7 +218,7 @@ function Results({ answers, title, mode, onRestart }) {
 
 /* ── Flashcard Stack ────────────────────────────────────────────────────────── */
 function FlashcardStack({ subtopic, onStart }) {
-  const meta = SUBTOPIC_META[subtopic];
+  const meta = SUBTOPIC_META[subtopic] || Object.entries(SUBTOPIC_META).find(([k])=>k.toLowerCase()===(subtopic||'').toLowerCase())?.[1];
   
 
   // Build 3-5 flashcards from the theory text
@@ -611,7 +611,7 @@ function BrowseTab({ topicsData }) {
       {loading&&<div style={{ textAlign:'center', padding:30, color:'#b0bec9' }}>Loading…</div>}
       {!loading&&questions.map(q=>{
         const isOpen=expanded===q._id;
-        const qMeta=SUBTOPIC_META[q.subtopic]||{};
+        const qMeta=SUBTOPIC_META[q.subtopic]||Object.entries(SUBTOPIC_META).find(([k])=>k.toLowerCase()===(q.subtopic||'').toLowerCase())?.[1]||{};
         return (
           <div key={q._id} className="card" style={{ padding:'14px 18px', marginBottom:10 }}>
             <div style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
@@ -627,6 +627,8 @@ function BrowseTab({ topicsData }) {
                 <div style={{ fontWeight:600, fontSize:'.87rem', color:'#0f1a2e', lineHeight:1.65 }}>{q.question}</div>
               </div>
               <div style={{ display:'flex', gap:5, flexShrink:0 }}>
+                {qMeta.gfg&&<a href={qMeta.gfg} target="_blank" rel="noreferrer" title="Practice on GeeksForGeeks" style={{ padding:'5px 9px', borderRadius:8, background:'rgba(46,168,84,0.08)', color:'#2ea854', fontWeight:800, fontSize:'.72rem', textDecoration:'none', border:'1px solid rgba(46,168,84,0.2)' }}>GFG →</a>}
+                {qMeta.indiabix&&<a href={qMeta.indiabix} target="_blank" rel="noreferrer" title="Practice on IndiaBix" style={{ padding:'5px 9px', borderRadius:8, background:'rgba(19,161,165,0.08)', color:'#13a1a5', fontWeight:800, fontSize:'.72rem', textDecoration:'none', border:'1px solid rgba(19,161,165,0.2)' }}>IndiaBix →</a>}
                 <button onClick={()=>setExp(isOpen?null:q._id)} style={{ padding:'5px 10px', borderRadius:8, border:'1.5px solid #d0d7e8', background:isOpen?'rgba(83,22,151,0.06)':'transparent', color:'#531697', cursor:'pointer', fontSize:'.75rem', fontWeight:700 }}>{isOpen?'Hide':'View'}</button>
                 <button onClick={()=>toggleBM(q._id)} style={{ padding:'5px 9px', borderRadius:8, border:'1.5px solid #d0d7e8', background:bookmarks.includes(q._id)?'rgba(245,158,11,0.08)':'transparent', color:bookmarks.includes(q._id)?'#f59e0b':'#b0bec9', cursor:'pointer', fontSize:'1rem' }}>{bookmarks.includes(q._id)?'🔖':'☆'}</button>
               </div>

@@ -297,12 +297,38 @@ function AnalysisResults({ dbResult, full, onNewAnalysis }) {
           {/* Reasoning trace */}
           {trace && (
             <div className="card" style={{ padding:'18px 20px',marginTop:6 }}>
-              <div style={{ fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:'.88rem',marginBottom:12,color:'#3d4e6b' }}>🔬 Analysis Methodology</div>
-              {Object.entries(trace).map(([k,v])=>(
-                <div key={k} style={{ marginBottom:10 }}>
-                  <div style={{ fontSize:'.72rem',fontWeight:700,color:'#531697',marginBottom:3,textTransform:'capitalize' }}>{k.replace(/_/g,' ')}</div>
-                  <div style={{ fontSize:'.78rem',color:'#7a8ba8',lineHeight:1.6 }}>{v}</div>
+              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12 }}>
+                <div style={{ fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:'.88rem',color:'#3d4e6b' }}>🔬 ML Analysis Methodology v2</div>
+                {trace.ml_confidence !== undefined && (
+                  <span style={{ padding:'4px 10px',borderRadius:999,background:'rgba(83,22,151,0.08)',color:'#531697',fontSize:'.72rem',fontWeight:700 }}>
+                    🎯 Confidence: {Math.round((trace.ml_confidence||0)*100)}%
+                  </span>
+                )}
+              </div>
+              {full?.dominant_cluster && (
+                <div style={{ marginBottom:12,padding:'8px 12px',borderRadius:8,background:'rgba(19,161,165,0.07)',border:'1px solid rgba(19,161,165,0.15)',fontSize:'.78rem',color:'#0f766e',fontWeight:600 }}>
+                  🧠 Dominant Skill Cluster: <strong>{full.dominant_cluster}</strong>
                 </div>
+              )}
+              {trace.top_skills_by_market_demand && trace.top_skills_by_market_demand.length > 0 && (
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:'.72rem',fontWeight:700,color:'#0369a1',marginBottom:6 }}>📈 Top Gap Skills by Market Demand (Indian JDs)</div>
+                  <div style={{ display:'flex',flexWrap:'wrap',gap:5 }}>
+                    {trace.top_skills_by_market_demand.map(s=>(
+                      <span key={s.skill} style={{ padding:'3px 9px',borderRadius:999,background:'#e0f2fe',color:'#0369a1',fontSize:'.7rem',fontWeight:700 }}>
+                        {s.skill} — {Math.round(s.market_demand*100)}%
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {Object.entries(trace).filter(([k])=>!['top_skills_by_market_demand','ml_confidence'].includes(k)).map(([k,v])=>(
+                typeof v === 'string' && (
+                  <div key={k} style={{ marginBottom:10 }}>
+                    <div style={{ fontSize:'.72rem',fontWeight:700,color:'#531697',marginBottom:3,textTransform:'capitalize' }}>{k.replace(/_/g,' ')}</div>
+                    <div style={{ fontSize:'.78rem',color:'#7a8ba8',lineHeight:1.6 }}>{v}</div>
+                  </div>
+                )
               ))}
             </div>
           )}
@@ -323,7 +349,15 @@ function AnalysisResults({ dbResult, full, onNewAnalysis }) {
                     <div style={{ width:36,height:36,borderRadius:'50%',background:PHASE_GRAD[pi%4],display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:800,fontSize:'.9rem',flexShrink:0 }}>{phase.phase}</div>
                     <div>
                       <div style={{ fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:'1rem',color:'#0f1a2e' }}>{phase.phase_name}</div>
-                      <div style={{ fontSize:'.75rem',color:'#7a8ba8' }}>{phase.duration_weeks} week{phase.duration_weeks!==1?'s':''} · {phase.modules?.length||0} module{(phase.modules?.length||0)!==1?'s':''}</div>
+                      <div style={{ fontSize:'.75rem',color:'#7a8ba8' }}>
+                        {phase.duration_weeks} week{phase.duration_weeks!==1?'s':''} · {phase.modules?.length||0} module{(phase.modules?.length||0)!==1?'s':''}
+                        {phase.total_hours && ` · ${phase.total_hours}h total`}
+                        {phase.avg_confidence !== undefined && (
+                          <span style={{ marginLeft:8,color:'#6b21a8',fontWeight:700 }}>
+                            🎯 {Math.round(phase.avg_confidence*100)}% confidence
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {phase.description && <div style={{ fontSize:'.82rem',color:'#7a8ba8',marginBottom:14,lineHeight:1.6 }}>{phase.description}</div>}

@@ -294,6 +294,19 @@ function StudentDash() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Auto-refresh company readiness when the browser tab regains focus
+  // (catches cases where user did a SkillPath analysis and switched back)
+  useEffect(() => {
+    async function refreshOnFocus() {
+      try {
+        const cr = await apiFetch('/analytics/company-readiness');
+        if (cr?.results) setCompReadiness(cr.results);
+      } catch {}
+    }
+    window.addEventListener('focus', refreshOnFocus);
+    return () => window.removeEventListener('focus', refreshOnFocus);
+  }, []);
+
   const user   = data?.user || ctxUser || {};
   const ats    = user?.atsScore || 0;
   const lvl    = user?.skillLevel || 'Beginner';
@@ -665,13 +678,20 @@ function StudentDash() {
       </div>
 
       {/* Company Readiness */}
-      {compReadiness.length > 0 && (
+      {(compReadiness.length > 0 || true) && (
         <div className="card" style={{ padding:'16px 18px', marginBottom:12 }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:6, color:'#0f1a2e', display:'flex', justifyContent:'space-between' }}>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:6, color:'#0f1a2e', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
             <span>🏢 Company Readiness Score</span>
-            <button onClick={()=>nav('/dashboard/companies')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#531697', fontWeight:700, fontSize:'.72rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>View all →</button>
+            <div style={{ display:'flex', gap:6 }}>
+              <button onClick={async()=>{ const cr=await apiFetch('/analytics/company-readiness'); if(cr?.results) setCompReadiness(cr.results); }}
+                style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#13a1a5', fontWeight:700, fontSize:'.72rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>↻ Refresh</button>
+              <button onClick={()=>nav('/dashboard/companies')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#531697', fontWeight:700, fontSize:'.72rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>View all →</button>
+            </div>
           </div>
-          <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginBottom:10 }}>Based on your skills ({user?.resumeParsedSkills?.length||0}), ATS {ats}/100, and company JD requirements</div>
+          <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginBottom:10 }}>
+            Based on your skills ({user?.resumeParsedSkills?.length||0}), ATS {ats}/100, and company JD requirements.
+            {!(user?.resumeParsedSkills?.length) && <span style={{ color:'#f59e0b', fontWeight:700 }}> Upload your resume in SkillPath AI to personalise scores.</span>}
+          </div>
           {compReadiness.slice(0,6).map(c=>{
             const mc = c.matchScore>=75?'#47d372':c.matchScore>=50?'#f59e0b':'#ef4444';
             return (

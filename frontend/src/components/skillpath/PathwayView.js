@@ -18,7 +18,7 @@ function ModuleRow({ module }) {
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {module.estimated_hours && (
             <span style={{ fontSize: '.72rem', color: '#64748b', background: '#f1f5fb', padding: '2px 8px', borderRadius: 999 }}>
               ~{module.estimated_hours}h
@@ -26,11 +26,21 @@ function ModuleRow({ module }) {
           )}
           {module.priority && (
             <span style={{
-              fontSize: '.72rem', fontWeight: 600, padding: '2px 8px', borderRadius: 999,
+              fontSize: '.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999,
               background: module.priority === 'high' ? '#fee2e2' : module.priority === 'medium' ? '#fef3c7' : '#f1f5fb',
               color: module.priority === 'high' ? '#991b1b' : module.priority === 'medium' ? '#92400e' : '#475569',
             }}>
-              {module.priority}
+              {module.priority === 'high' ? '🔴' : module.priority === 'medium' ? '🟡' : '🟢'} {module.priority}
+            </span>
+          )}
+          {module.market_demand !== undefined && (
+            <span title="Market demand in Indian tech JDs" style={{ fontSize: '.7rem', color: '#0369a1', background: '#e0f2fe', padding: '2px 7px', borderRadius: 999, fontWeight: 600 }}>
+              📈 {Math.round((module.market_demand || 0) * 100)}%
+            </span>
+          )}
+          {module.confidence !== undefined && (
+            <span title="Gap confidence score" style={{ fontSize: '.7rem', color: '#6b21a8', background: '#f3e8ff', padding: '2px 7px', borderRadius: 999, fontWeight: 600 }}>
+              🎯 {Math.round((module.confidence || 0) * 100)}%
             </span>
           )}
         </div>
