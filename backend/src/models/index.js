@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 // ─── Company ─────────────────────────────────────────────────────────────────
@@ -32,15 +31,24 @@ const companySchema = new mongoose.Schema({
 // ─── Problem ─────────────────────────────────────────────────────────────────
 const problemSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  source: { type: String, enum: ['LeetCode', 'HackerRank', 'CodeChef', 'Custom'], required: true },
-  problemId: { type: String },
-  url: { type: String },
+  source: { type: String, enum: ['LeetCode', 'HackerRank', 'CodeChef', 'GFG', 'Custom'], required: true },
+  problemId: { type: String },           // LeetCode problem number (e.g. "1", "121")
+  url: { type: String },                 // Direct link to the problem
   difficulty: { type: String, enum: ['Easy', 'Medium', 'Hard'], required: true },
-  topic: { type: String },   // Arrays, DP, Trees, etc.
-  tags: [String],
+  topic: { type: String },               // Arrays, DP, Trees, etc.
+  tags: [String],                        // Two Pointers, Sliding Window, etc.
+  description: { type: String },         // Problem statement summary
+  constraints: { type: String },         // Input constraints
+  companies: [String],                   // Companies that asked this problem
   company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+  hints: [String],                       // Approach hints without spoiling
+  acceptanceRate: { type: Number },      // e.g. 49.5 (%)
   assignedDate: { type: Date, default: Date.now }
 }, { timestamps: true });
+
+// Index for fast daily problem lookup
+problemSchema.index({ difficulty: 1, topic: 1 });
+problemSchema.index({ source: 1, problemId: 1 }, { unique: true, sparse: true });
 
 // ─── User Problem Progress ────────────────────────────────────────────────────
 const userProblemSchema = new mongoose.Schema({
