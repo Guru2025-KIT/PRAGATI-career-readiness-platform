@@ -241,7 +241,7 @@ async function seed() {
     },
     {
       name: "Hexaware Technologies",
-      logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl8dEmVFq3o0S0CK6YsJqRZtnTmtoq6Si-yQ&s",
+      logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMFIZ-c9plDnV3Ir2Dvp09vbDh0vSl_foPDg&s",
       sector: "IT Services & BPO",
       website: "https://hexaware.com",
       status: "upcoming",
@@ -376,7 +376,7 @@ async function seed() {
     },
     {
       name: "KPIT Technologies",
-      logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRO_SAOJLqLvVaqZmX3hKKkq_Hd7ABqZ0cUA&s",
+      logoUrl: "https://lapentor-sphere.s3.amazonaws.com/uploads/vr/5d78bea2ffd0e1091ea5bcda/asset/1568613259-0.jpg",
       sector: "Automotive IT & Engineering",
       website: "https://kpit.com",
       status: "expected",

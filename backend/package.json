@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "seed": "node src/utils/seeder.js"
+    "seed": "node src/utils/seeder.js",
+    "seed:problems": "node src/utils/leetcode-problems-seed.js",
+    "seed:aptitude": "node src/utils/aptitude-seed-full.js",
+    "seed:all": "node src/utils/seeder.js && node src/utils/leetcode-problems-seed.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
