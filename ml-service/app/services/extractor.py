@@ -10,8 +10,10 @@ Skill extraction engine using NLP techniques:
 import re
 import json
 import logging
+import math
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
+from collections import Counter
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -30,6 +32,65 @@ for skill_key, skill_data in SKILLS.items():
     ALIAS_MAP[skill_key.lower()] = skill_key
     for alias in skill_data.get("aliases", []):
         ALIAS_MAP[alias.lower()] = skill_key
+
+
+# ── TF-IDF + Cosine Similarity Engine ──────────────────────────────────────────
+
+def tokenize(text: str) -> List[str]:
+    """Simple whitespace+punctuation tokenizer returning lowercased tokens."""
+    return re.findall(r"[a-z0-9#\.\+]+", text.lower())
+
+
+def build_tfidf_vector(tokens: List[str], vocab: Dict[str, int]) -> np.ndarray:
+    """Compute TF-IDF vector for a token list given a global vocab."""
+    tf = Counter(tokens)
+    vec = np.zeros(len(vocab))
+    for word, idx in vocab.items():
+        count = tf.get(word, 0)
+        if count > 0:
+            tf_val  = count / max(len(tokens), 1)
+            idf_val = math.log(1 + 1 / (1 + count))  # smoothed IDF
+            vec[idx] = tf_val * idf_val
+    return vec
+
+
+def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
+    """Return cosine similarity between two vectors."""
+    denom = np.linalg.norm(a) * np.linalg.norm(b)
+    if denom == 0:
+        return 0.0
+    return float(np.dot(a, b) / denom)
+
+
+def fuzzy_skill_match(text_tokens: List[str], skill_key: str, threshold: float = 0.70) -> float:
+    """
+    Compute cosine similarity between text token vector and skill alias vector.
+    Returns a confidence score in [0, 1].
+    Falls back to exact substring match if cosine is below threshold.
+    """
+    skill_data = SKILLS.get(skill_key, {})
+    aliases    = [skill_key] + skill_data.get("aliases", [])
+    alias_tokens = tokenize(" ".join(aliases))
+
+    all_tokens = list(set(text_tokens + alias_tokens))
+    vocab      = {tok: i for i, tok in enumerate(all_tokens)}
+
+    text_vec  = build_tfidf_vector(text_tokens, vocab)
+    alias_vec = build_tfidf_vector(alias_tokens, vocab)
+
+    sim = cosine_similarity(text_vec, alias_vec)
+    return round(sim, 3)
+
+
+def extract_ngrams(text: str, n: int = 3) -> List[str]:
+    """Extract word n-grams from normalised text for multi-word skill matching."""
+    words = text.split()
+    ngrams = []
+    for size in range(1, n + 1):
+        for i in range(len(words) - size + 1):
+            ngrams.append(" ".join(words[i: i + size]))
+    return ngrams
+
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
