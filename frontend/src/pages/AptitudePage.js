@@ -10,47 +10,157 @@ const GRAD  = 'linear-gradient(135deg,#531697,#13a1a5)';
 
 // ── Subtopic metadata: theory + GFG/IndiaBix links ─────────────────────────
 const SUBTOPIC_META = {
-  'Number System':{ theory:'Covers divisibility rules, LCM/HCF, prime factorization, unit digits, surds & indices. Key tip: Memorize divisibility rules for 2–13 and practice factor trees.', gfg:'https://www.geeksforgeeks.org/number-system-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/number-system/' },
-  'Percentages':{ theory:'Percentages link to profit/loss, discount, interest and population problems. Formula: (Part/Whole)×100. Key: Successive % change = (a+b+ab/100)%.', gfg:'https://www.geeksforgeeks.org/percentage-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/percentage/' },
-  'Profit & Loss':{ theory:'Profit = SP−CP; Loss = CP−SP. Profit% = (Profit/CP)×100. Marked Price (MP) and successive discounts are key areas. False weight problems are common.', gfg:'https://www.geeksforgeeks.org/profit-and-loss-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/profit-and-loss/' },
-  'Simple & Compound Interest':{ theory:'SI = PRT/100. CI = P(1+r/100)^n − P. Difference CI−SI for 2 yrs = P(r/100)². CI compounds on previous interest; SI is always on principal.', gfg:'https://www.geeksforgeeks.org/simple-interest-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/simple-interest/' },
-  'Ratio & Proportion':{ theory:'a:b = c:d (proportion) ⟹ ad=bc. Mean proportional of a,b = √(ab). Combine ratios using LCM. Partnership divides profit in ratio of investment × time.', gfg:'https://www.geeksforgeeks.org/ratio-and-proportion-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/ratio-and-proportion/' },
-  'Averages':{ theory:'Average = Sum/Count. When one element is replaced: New avg = Old avg + (New−Old)/n. Weighted average uses proportional weights. Always recalculate total when avg changes.', gfg:'https://www.geeksforgeeks.org/average-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/average/' },
-  'Mixture & Alligation':{ theory:'Alligation Rule: (Dearer−Mean):(Mean−Cheaper) = ratio of cheaper to dearer. Used for mixing solutions, alloys or blends. Apply repeatedly for 3-component mixtures.', gfg:'https://www.geeksforgeeks.org/mixture-and-alligation-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/alligation-or-mixture/' },
-  'Time & Work':{ theory:"If A finishes in n days, A's 1-day work = 1/n. Combined rate = sum of individual rates. For pipes: filling = +ve rate, emptying = −ve. LCM method simplifies multi-person problems.", gfg:'https://www.geeksforgeeks.org/time-and-work-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/time-and-work/' },
-  'Pipes & Cisterns':{ theory:'Inlet pipe fills (+ve rate), outlet drains (−ve). Net rate = sum of all. Time to fill = 1/net_rate. Key: find when tank becomes full/empty with multiple pipes open.', gfg:'https://www.geeksforgeeks.org/pipes-and-cisterns-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/pipes-and-cistern/' },
-  'Speed, Time & Distance':{ theory:'Speed = Distance/Time. Convert km/h↔m/s: multiply/divide by 5/18. Relative speed: same dir = diff, opposite = sum. Average speed = 2S₁S₂/(S₁+S₂) for equal distances.', gfg:'https://www.geeksforgeeks.org/time-speed-and-distance-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/time-and-distance/' },
-  'Boats & Streams':{ theory:'Downstream speed = B+S. Upstream = B−S. Still water = (D+U)/2. Stream speed = (D−U)/2. Always identify whether speed given is still water, upstream, or downstream.', gfg:'https://www.geeksforgeeks.org/boats-and-streams-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/boats-and-streams/' },
-  'Algebra':{ theory:'Linear equations, quadratic equations, logarithms. Sum of roots = −b/a, product = c/a. Key identities: (a+b)²=a²+2ab+b², (a+b)(a−b)=a²−b². Log rules: log(mn)=logm+logn.', gfg:'https://www.geeksforgeeks.org/algebra-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/problems-on-numbers/' },
-  'Progressions':{ theory:'AP: nth term=a+(n−1)d; Sum=n/2[2a+(n−1)d]. GP: nth term=ar^(n−1); Sum=a(r^n−1)/(r−1). HP: reciprocals form AP. Key: identify pattern before applying formula.', gfg:'https://www.geeksforgeeks.org/arithmetic-progression-aptitude/', indiabix:'https://www.indiabix.com/aptitude/problems-on-numbers/' },
-  'Mensuration':{ theory:'2D: Circle area=πr², Triangle=½bh, Trapezium=½(a+b)h. 3D: Cylinder V=πr²h, Cone V=πr²h/3, Sphere SA=4πr². Use π=22/7 for calculations. Always check units.', gfg:'https://www.geeksforgeeks.org/mensuration-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/area/' },
-  'Permutation & Combination':{ theory:'Permutation = nPr = n!/(n−r)! (order matters). Combination = nCr = n!/(r!(n−r)!) (order irrelevant). Circular: (n−1)!. Identical objects: divide by their factorials.', gfg:'https://www.geeksforgeeks.org/permutation-and-combination/', indiabix:'https://www.indiabix.com/aptitude/permutation-and-combination/' },
-  'Probability':{ theory:'P(E) = Favourable/Total. P(A∪B)=P(A)+P(B)−P(A∩B). Independent: P(A∩B)=P(A)×P(B). Complement: P(not A)=1−P(A). Always enumerate sample space for clarity.', gfg:'https://www.geeksforgeeks.org/probability-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/probability/' },
-  'Clocks':{ theory:'Minute hand gains 5.5°/min over hour hand. They overlap every 720/11 min. Angle between hands at H:M = |30H−5.5M|°. Mirror time = 11:60 − given time.', gfg:'https://www.geeksforgeeks.org/clocks-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/clock/' },
-  'Calendars':{ theory:'Odd days: 1 ordinary year=1, 1 leap year=2. 100 yrs=5, 200 yrs=3, 300 yrs=1, 400 yrs=0 odd days. Add odd days, find remainder mod 7 to get weekday.', gfg:'https://www.geeksforgeeks.org/calendar-aptitude-questions/', indiabix:'https://www.indiabix.com/aptitude/calendar/' },
-  'Data Interpretation':{ theory:'Read graphs/tables carefully. For pie charts: segment%×total=value. Common types: % change, ratio, average, comparison. Always check scale and units before calculating.', gfg:'https://www.geeksforgeeks.org/data-interpretation-aptitude-questions/', indiabix:'https://www.indiabix.com/data-interpretation/table-charts/' },
-  'Seating Arrangement':{ theory:'Linear: determine positions from conditions. Circular: fix one person, find relative positions. Key: always draw a diagram. Process definite clues first, then tentative ones.', gfg:'https://www.geeksforgeeks.org/seating-arrangement-logical-reasoning/', indiabix:'https://www.indiabix.com/logical-reasoning/seating-arrangement/' },
-  'Blood Relations':{ theory:'Draw a family tree. Identify gender from context. Common trick: "pointing to photo" problems — trace the chain step by step. Symbol codes map one relation each.', gfg:'https://www.geeksforgeeks.org/blood-relations-logical-reasoning/', indiabix:'https://www.indiabix.com/logical-reasoning/blood-relation-test/' },
-  'Direction Sense':{ theory:'Track N↑ S↓ E→ W← axes. Each turn changes direction. Final displacement = √(h²+v²). Shadow direction depends on sun position (morning=west, evening=east).', gfg:'https://www.geeksforgeeks.org/direction-sense-test-aptitude-questions/', indiabix:'https://www.indiabix.com/logical-reasoning/direction-sense-test/' },
-  'Number Series':{ theory:'Look for: AP (constant diff), GP (constant ratio), squares/cubes, alternating series, difference-of-difference patterns. Check 2nd and 3rd order differences for complex series.', gfg:'https://www.geeksforgeeks.org/number-series-aptitude-questions/', indiabix:'https://www.indiabix.com/logical-reasoning/number-series/' },
-  'Letter Series':{ theory:'Assign A=1…Z=26. Check forward/backward alphabets, alternate positions, vowel/consonant patterns. For pairs: track first and second letters independently.', gfg:'https://www.geeksforgeeks.org/letter-series-logical-reasoning/', indiabix:'https://www.indiabix.com/logical-reasoning/alphabet-test/' },
-  'Alphanumeric Series':{ theory:'Combined letter+number patterns. Solve letter and number positions independently, then combine. Look for gaps, wrap-arounds (Z→A), and alternating directions.', gfg:'https://www.geeksforgeeks.org/alphanumeric-series-aptitude/', indiabix:'https://www.indiabix.com/logical-reasoning/series-completion/' },
-  'Coding-Decoding':{ theory:'Types: letter shift (+n/−n), reverse alphabet (A↔Z), position-based (A=1,B=2…), word reversal, symbol substitution. Always verify pattern with the given example.', gfg:'https://www.geeksforgeeks.org/coding-decoding-aptitude-questions/', indiabix:'https://www.indiabix.com/logical-reasoning/coding-decoding/' },
-  'Syllogism':{ theory:'Use Venn diagrams. "All A are B"=A inside B. "No A is B"=separate circles. "Some A are B"=overlapping. Conclusions must be 100% certain from premises — avoid assumptions.', gfg:'https://www.geeksforgeeks.org/syllogism-aptitude-questions/', indiabix:'https://www.indiabix.com/logical-reasoning/statement-and-conclusion/' },
-  'Statements & Conclusions':{ theory:'A conclusion must logically follow from the statement — no external assumptions. "Definitely true" needs certainty. "Probably true" only with strong evidence. Do not over-generalize.', gfg:'https://www.geeksforgeeks.org/statement-and-conclusion-logical-reasoning/', indiabix:'https://www.indiabix.com/logical-reasoning/statement-and-conclusion/' },
-  'Mirror Images':{ theory:'Vertical mirror flips left-right. Clock mirror time = 11:60 − shown time. Letters that look same in mirror: A,H,I,M,O,T,U,V,W,X,Y. Practice with actual examples.', gfg:'https://www.geeksforgeeks.org/mirror-images-non-verbal-reasoning/', indiabix:'https://www.indiabix.com/non-verbal-reasoning/mirror-images/' },
-  'Odd One Out':{ theory:'Find item that doesn\'t belong by: category (fruits vs vegetables), property (odd/even, prime), series pattern, shape. Always check multiple properties before deciding.', gfg:'https://www.geeksforgeeks.org/odd-one-out-aptitude/', indiabix:'https://www.indiabix.com/verbal-reasoning/classification/' },
-  'Synonyms & Antonyms':{ theory:'Build vocabulary daily. Synonyms: choose closest meaning in context. Antonyms: look for prefixes un-, dis-, in-, im-, non-. Consider connotation (positive/negative tone).', gfg:'https://www.geeksforgeeks.org/synonyms-and-antonyms-verbal-ability/', indiabix:'https://www.indiabix.com/verbal-ability/synonyms/' },
-  'Grammar':{ theory:'Key areas: subject-verb agreement, tenses, articles (a/an/the), prepositions, conditionals, active/passive voice. For error spotting: test each part of the sentence individually.', gfg:'https://www.geeksforgeeks.org/error-spotting-verbal-ability/', indiabix:'https://www.indiabix.com/verbal-ability/spotting-errors/' },
-  'One Word Substitution':{ theory:'Learn common substitutions: phobias (hydrophobia=fear of water), -logy (study of), -phile (lover of), government types (democracy, autocracy), and profession-based terms.', gfg:'https://www.geeksforgeeks.org/one-word-substitution-verbal-ability/', indiabix:'https://www.indiabix.com/verbal-ability/one-word-substitutes/' },
-  'Idioms & Phrases':{ theory:'Idioms have non-literal meanings. Learn common ones: "kick the bucket"=die, "bite the bullet"=endure bravely, "burn midnight oil"=work late. Context determines which meaning applies.', gfg:'https://www.geeksforgeeks.org/idioms-and-phrases-verbal-ability/', indiabix:'https://www.indiabix.com/verbal-ability/idioms-and-phrases/' },
-  'Para Jumbles':{ theory:'Find the opening sentence (introduces topic, no pronoun reference). Find pairs that must go together. Look for connectives (however, therefore, moreover). Build logical story flow.', gfg:'https://www.geeksforgeeks.org/para-jumbles-verbal-ability/', indiabix:'https://www.indiabix.com/verbal-ability/ordering-of-sentences/' },
-  'Reading Comprehension':{ theory:'Read questions first, then the passage. Fact-based Qs: answer directly in text. Inference Qs: logical conclusion from text. Tone Qs: judge from word choice and attitude.', gfg:'https://www.geeksforgeeks.org/reading-comprehension-verbal-ability/', indiabix:'https://www.indiabix.com/verbal-ability/comprehension/' },
-};
+  /* ── Quantitative Aptitude ──────────────────────────────────────────── */
+  'Number System':{
+    theory:'Covers divisibility rules, LCM/HCF, prime factorization, unit digits, surds & indices.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/number-system-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/numbers/' },
+  'Percentages':{
+    theory:'Percentages link to profit/loss, discount, interest. Formula: (Part/Whole)×100.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/percentages-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/percentage/' },
+  'Profit & Loss':{
+    theory:'Profit = SP−CP. Profit% = (Profit/CP)×100. Key: Marked Price and successive discounts.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/profit-loss-discount-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/profit-and-loss/' },
+  'Simple & Compound Interest':{
+    theory:'SI = PRT/100. CI = P(1+r/100)^n − P. Difference CI−SI for 2 yrs = P(r/100)².',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/interest-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/simple-interest/' },
+  'Ratio & Proportion':{
+    theory:'a:b = c:d ⟹ ad=bc. Partnership divides profit in ratio of investment × time.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/ratio-proportion-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/ratio-and-proportion/' },
+  'Averages':{
+    theory:'Average = Sum/Count. Weighted average uses proportional weights.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/averages-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/average/' },
+  'Mixture & Alligation':{
+    theory:'Alligation Rule: (Dearer−Mean):(Mean−Cheaper) = ratio of cheaper to dearer.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/mixture-and-alligation-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/alligation-or-mixture/' },
+  'Time & Work':{
+    theory:"If A finishes in n days, A's 1-day work = 1/n. LCM method simplifies multi-person problems.",
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/time-and-work-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/time-and-work/' },
+  'Pipes & Cisterns':{
+    theory:'Inlet fills (+ve), outlet drains (−ve). Net rate = sum of all rates.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/pipes-and-cisterns-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/pipes-and-cistern/' },
+  'Speed, Time & Distance':{
+    theory:'Speed = Distance/Time. Average speed = 2S₁S₂/(S₁+S₂) for equal distances.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/speed-time-distance-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/time-and-distance/' },
+  'Boats & Streams':{
+    theory:'Downstream = B+S. Upstream = B−S. Still water = (D+U)/2.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/boat-and-streams-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/boats-and-streams/' },
+  'Algebra':{
+    theory:'Linear/quadratic equations. Sum of roots = −b/a, product = c/a.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/algebra-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/problems-on-numbers/' },
+  'Progressions':{
+    theory:'AP: nth term=a+(n−1)d. GP: nth term=arⁿ⁻¹. HP: reciprocals form AP.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/progressions-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/problems-on-numbers/' },
+  'Mensuration':{
+    theory:'2D: Circle=πr², Triangle=½bh. 3D: Cylinder=πr²h, Cone=πr²h/3, Sphere SA=4πr².',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/mensuration-2d-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/area/' },
+  'Permutation & Combination':{
+    theory:'nPr = n!/(n−r)! (order matters). nCr = n!/(r!(n−r)!) (order irrelevant).',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/permutation-and-combinations-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/permutation-and-combination/' },
+  'Probability':{
+    theory:'P(E) = Favourable/Total. P(A∪B)=P(A)+P(B)−P(A∩B).',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/probability-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/probability/' },
+  'Clocks':{
+    theory:'Minute hand gains 5.5°/min over hour hand. They overlap every 720/11 min.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/clock-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/clock/' },
+  'Calendars':{
+    theory:'Odd days: 1 ordinary year=1, 1 leap year=2. 100 yrs=5 odd days.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/calendar-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/aptitude/calendar/' },
+  'Data Interpretation':{
+    theory:'Read graphs/tables carefully. For pie charts: segment%×total=value.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/data-interpretation/',
+    indiabix:'https://www.indiabix.com/data-interpretation/table-charts/' },
 
-const TOPIC_SUBTOPICS = {
-  'Quantitative':['Number System','Percentages','Profit & Loss','Simple & Compound Interest','Ratio & Proportion','Averages','Mixture & Alligation','Time & Work','Pipes & Cisterns','Speed, Time & Distance','Boats & Streams','Algebra','Progressions','Mensuration','Permutation & Combination','Probability','Clocks','Calendars','Data Interpretation'],
-  'Logical Reasoning':['Seating Arrangement','Blood Relations','Direction Sense','Number Series','Letter Series','Alphanumeric Series','Coding-Decoding','Syllogism','Statements & Conclusions','Mirror Images','Odd One Out'],
+  /* ── Logical Reasoning ──────────────────────────────────────────────── */
+  'Seating Arrangement':{
+    theory:'Linear: determine positions from conditions. Circular: fix one person. Draw a diagram first.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/seating-arrangement-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/seating-arrangement/' },
+  'Blood Relations':{
+    theory:'Draw a family tree. Common trick: "pointing to photo" problems — trace step by step.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/blood-relations-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/blood-relation-test/' },
+  'Direction Sense':{
+    theory:'Track N↑ S↓ E→ W← axes. Final displacement = √(h²+v²).',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/direction-sense-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/direction-sense-test/' },
+  'Number Series':{
+    theory:'Look for: AP, GP, squares/cubes, alternating series, difference-of-difference patterns.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/number-series-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/number-series/' },
+  'Letter Series':{
+    theory:'Assign A=1…Z=26. Check forward/backward alphabets, alternate positions.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/letter-series-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/alphabet-test/' },
+  'Alphanumeric Series':{
+    theory:'Solve letter and number positions independently, then combine.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/letter-and-symbol-series/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/series-completion/' },
+  'Coding-Decoding':{
+    theory:'Types: letter shift, reverse alphabet, position-based (A=1,B=2…), word reversal.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/coding-decoding-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/coding-decoding/' },
+  'Syllogism':{
+    theory:'Use Venn diagrams. Conclusions must be 100% certain — avoid assumptions.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/syllogism-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/statement-and-conclusion/' },
+  'Statements & Conclusions':{
+    theory:'A conclusion must logically follow — no external assumptions. Do not over-generalise.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/statement-and-conclusion-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/logical-reasoning/statement-and-conclusion/' },
+  'Mirror Images':{
+    theory:'Vertical mirror flips left-right. Letters unchanged: A,H,I,M,O,T,U,V,W,X,Y.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/mirror-images-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/non-verbal-reasoning/mirror-images/' },
+  'Odd One Out':{
+    theory:'Find item that does not belong by category, property, series pattern, or shape.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/odd-one-out-aptitude-gq/',
+    indiabix:'https://www.indiabix.com/verbal-reasoning/classification/' },
+
+  /* ── Verbal Ability ─────────────────────────────────────────────────── */
+  'Synonyms & Antonyms':{
+    theory:'Build vocab daily. Antonyms: look for prefixes un-, dis-, in-, im-, non-.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/verbal-ability-gq/',
+    indiabix:'https://www.indiabix.com/verbal-ability/synonyms/' },
+  'Grammar':{
+    theory:'Subject-verb agreement, tenses, articles (a/an/the), prepositions, active/passive voice.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/grammar-verbal-ability-gq/',
+    indiabix:'https://www.indiabix.com/verbal-ability/spotting-errors/' },
+  'One Word Substitution':{
+    theory:'Learn phobias, -logy (study of), -phile (lover of), government types.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/one-word-substitution/',
+    indiabix:'https://www.indiabix.com/verbal-ability/one-word-substitutes/' },
+  'Idioms & Phrases':{
+    theory:'Idioms have non-literal meanings. "kick the bucket"=die, "bite the bullet"=endure bravely.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/idioms-and-phrases/',
+    indiabix:'https://www.indiabix.com/verbal-ability/idioms-and-phrases/' },
+  'Para Jumbles':{
+    theory:'Find opening sentence (no pronoun reference). Look for connectives (however, therefore).',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/verbal-ability-gq/',
+    indiabix:'https://www.indiabix.com/verbal-ability/ordering-of-sentences/' },
+  'Reading Comprehension':{
+    theory:'Read questions first, then passage. Fact-based: answer in text. Inference: logical conclusion.',
+    gfg:'https://www.geeksforgeeks.org/aptitude-gq/verbal-ability-gq/',
+    indiabix:'https://www.indiabix.com/verbal-ability/comprehension/' },
+
+  /* ── Topic-level groups (for subtopic panel) ────────────────────────── */
   'Verbal Ability':['Synonyms & Antonyms','Grammar','One Word Substitution','Idioms & Phrases','Para Jumbles','Reading Comprehension'],
 };
 
@@ -75,6 +185,47 @@ function SubtopicInfoCard({ subtopic }) {
 }
 
 // ── Quiz Question ────────────────────────────────────────────────────────────
+
+/* ── Utility: Fisher-Yates shuffle ──────────────────────────────────── */
+function fisherYates(arr) {
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function shuffleOptions(q) {
+  if(!q.options||q.options.length<2) return q;
+  return {...q, options: fisherYates(q.options)};
+}
+
+/* ── Platform link fallbacks (main topic pages that always exist) ───── */
+const TOPIC_FALLBACK_GFG = {
+  'Quantitative Aptitude': 'https://www.geeksforgeeks.org/aptitude-questions-and-answers/',
+  'Logical Reasoning':     'https://www.geeksforgeeks.org/reasoning-aptitude-questions-and-answers/',
+  'Verbal Ability':        'https://www.geeksforgeeks.org/verbal-ability/',
+  'Technical':             'https://www.geeksforgeeks.org/technical-aptitude-questions/',
+};
+const TOPIC_FALLBACK_INDIABIX = {
+  'Quantitative Aptitude': 'https://www.indiabix.com/aptitude/questions-and-answers/',
+  'Logical Reasoning':     'https://www.indiabix.com/logical-reasoning/questions-and-answers/',
+  'Verbal Ability':        'https://www.indiabix.com/verbal-ability/questions-and-answers/',
+  'Technical':             'https://www.indiabix.com/technical/questions-and-answers/',
+};
+
+function SafeLink({ href, fallback, children, style }) {
+  function handleClick(e) {
+    // Just open the link normally - browsers handle 404 themselves
+    // We add a note in the tooltip
+  }
+  return (
+    <a href={href || fallback} target="_blank" rel="noreferrer"
+       title={`Opens ${href ? 'specific subtopic' : 'main topic'} page`}
+       style={style} onClick={handleClick}>
+      {children}
+    </a>
+  );
+}
+
 function QuizQuestion({ q, idx, total, onAnswer, onFinish, mode }) {
   const [sel, setSel]      = useState(null);
   const [revealed, setRev] = useState(false);
@@ -402,7 +553,7 @@ function TopicSelector({ topicsData, stats, progress, onStartPractice, onStartQu
           {showFlashcards && selSubtopic ? (
             <div className="card" style={{ padding:'20px 22px' }}>
               <button onClick={()=>{setShowFC(false);}} style={{ marginBottom:14, padding:'5px 12px', borderRadius:8, border:'1px solid #d0d7e8', background:'transparent', color:'#7a8ba8', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem' }}>← Back to Topics</button>
-              <FlashcardStack subtopic={selSubtopic} onStart={()=>onStartPractice({topic:selCategory, subtopic:selSubtopic, shuffle:false})} />
+              <FlashcardStack subtopic={selSubtopic} onStart={()=>{ if(!selCategory){alert('Please select a category first.');return;} onStartPractice({topic:selCategory, subtopic:selSubtopic, shuffle:false}); }} />
             </div>
           ) : (
             /* Category accordion */
@@ -438,7 +589,7 @@ function TopicSelector({ topicsData, stats, progress, onStartPractice, onStartQu
                       <div style={{ padding:'0 14px 14px' }}>
                         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:7 }}>
                           {subs.map(sub => {
-                            const m = SUBTOPIC_META[sub];
+                            const m = SUBTOPIC_META[sub] || Object.entries(SUBTOPIC_META).find(([k])=>k.toLowerCase()===((sub||'').toLowerCase()))?.[1];
                             const pct = subtopicProgress(cat);
                             return (
                               <div key={sub} onClick={()=>handleSelectSub(cat, sub)}
@@ -462,7 +613,7 @@ function TopicSelector({ topicsData, stats, progress, onStartPractice, onStartQu
                           })}
                         </div>
                         {/* Start all */}
-                        <button onClick={()=>onStartPractice({topic:cat, subtopic:'', shuffle:true})}
+                        <button onClick={()=>onStartPractice({topic:cat, subtopic:'', shuffle:true, count:20})}
                           style={{ marginTop:12, width:'100%', padding:'11px', borderRadius:10, border:'none', background:GRAD, color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.85rem' }}>
                           🔀 Start Shuffled Practice: All {cat}
                         </button>
@@ -627,15 +778,26 @@ function BrowseTab({ topicsData }) {
                 <div style={{ fontWeight:600, fontSize:'.87rem', color:'#0f1a2e', lineHeight:1.65 }}>{q.question}</div>
               </div>
               <div style={{ display:'flex', gap:5, flexShrink:0 }}>
-                {qMeta.gfg&&<a href={qMeta.gfg} target="_blank" rel="noreferrer" title="Practice on GeeksForGeeks" style={{ padding:'5px 9px', borderRadius:8, background:'rgba(46,168,84,0.08)', color:'#2ea854', fontWeight:800, fontSize:'.72rem', textDecoration:'none', border:'1px solid rgba(46,168,84,0.2)' }}>GFG →</a>}
-                {qMeta.indiabix&&<a href={qMeta.indiabix} target="_blank" rel="noreferrer" title="Practice on IndiaBix" style={{ padding:'5px 9px', borderRadius:8, background:'rgba(19,161,165,0.08)', color:'#13a1a5', fontWeight:800, fontSize:'.72rem', textDecoration:'none', border:'1px solid rgba(19,161,165,0.2)' }}>IndiaBix →</a>}
+                {/* GFG link - falls back to main topic page if subtopic link fails */}
+                <SafeLink
+                  href={qMeta.gfg}
+                  fallback={TOPIC_FALLBACK_GFG[q.topic] || 'https://www.geeksforgeeks.org/aptitude-questions-and-answers/'}
+                  style={{ padding:'5px 9px', borderRadius:8, background:'rgba(46,168,84,0.08)', color:'#2ea854', fontWeight:800, fontSize:'.72rem', textDecoration:'none', border:'1px solid rgba(46,168,84,0.2)' }}>
+                  GFG →
+                </SafeLink>
+                <SafeLink
+                  href={qMeta.indiabix}
+                  fallback={TOPIC_FALLBACK_INDIABIX[q.topic] || 'https://www.indiabix.com/aptitude/questions-and-answers/'}
+                  style={{ padding:'5px 9px', borderRadius:8, background:'rgba(19,161,165,0.08)', color:'#13a1a5', fontWeight:800, fontSize:'.72rem', textDecoration:'none', border:'1px solid rgba(19,161,165,0.2)' }}>
+                  IndiaBix →
+                </SafeLink>
                 <button onClick={()=>setExp(isOpen?null:q._id)} style={{ padding:'5px 10px', borderRadius:8, border:'1.5px solid #d0d7e8', background:isOpen?'rgba(83,22,151,0.06)':'transparent', color:'#531697', cursor:'pointer', fontSize:'.75rem', fontWeight:700 }}>{isOpen?'Hide':'View'}</button>
                 <button onClick={()=>toggleBM(q._id)} style={{ padding:'5px 9px', borderRadius:8, border:'1.5px solid #d0d7e8', background:bookmarks.includes(q._id)?'rgba(245,158,11,0.08)':'transparent', color:bookmarks.includes(q._id)?'#f59e0b':'#b0bec9', cursor:'pointer', fontSize:'1rem' }}>{bookmarks.includes(q._id)?'🔖':'☆'}</button>
               </div>
             </div>
             {isOpen&&(
               <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #f0f3fa' }}>
-                {(q.options||[]).map((opt,i)=>(
+                {fisherYates(q.options||[]).map((opt,i)=>(
                   <div key={i} style={{ padding:'6px 10px', borderRadius:7, marginBottom:4, fontSize:'.83rem', background:opt===q.answer?'rgba(71,211,114,0.09)':'transparent', color:opt===q.answer?'#166534':'#3d4e6b', fontWeight:opt===q.answer?700:400 }}>
                     {opt===q.answer?'✅':'○'} {opt}
                   </div>
@@ -643,8 +805,8 @@ function BrowseTab({ topicsData }) {
                 {q.explanation&&<div style={{ marginTop:8, padding:'10px 12px', background:'rgba(83,22,151,0.05)', borderRadius:8, fontSize:'.8rem', color:'#3d4e6b', lineHeight:1.65 }}><strong style={{ color:'#531697' }}>💡</strong> {q.explanation}</div>}
                 {qMeta.gfg&&(
                   <div style={{ marginTop:8, display:'flex', gap:6 }}>
-                    <a href={qMeta.gfg} target="_blank" rel="noreferrer" style={{ padding:'4px 9px', borderRadius:6, background:'rgba(46,168,84,0.08)', color:'#2ea854', fontSize:'.72rem', fontWeight:700, textDecoration:'none' }}>🟢 More on GFG →</a>
-                    <a href={qMeta.indiabix} target="_blank" rel="noreferrer" style={{ padding:'4px 9px', borderRadius:6, background:'rgba(19,161,165,0.08)', color:'#13a1a5', fontSize:'.72rem', fontWeight:700, textDecoration:'none' }}>📘 IndiaBix →</a>
+                    <SafeLink href={qMeta.gfg} fallback={TOPIC_FALLBACK_GFG[q.topic]||'https://www.geeksforgeeks.org/aptitude-questions-and-answers/'} style={{ padding:'4px 9px', borderRadius:6, background:'rgba(46,168,84,0.08)', color:'#2ea854', fontSize:'.72rem', fontWeight:700, textDecoration:'none' }}>🟢 More on GFG →</SafeLink>
+                    <SafeLink href={qMeta.indiabix} fallback={TOPIC_FALLBACK_INDIABIX[q.topic]||'https://www.indiabix.com/aptitude/questions-and-answers/'} style={{ padding:'4px 9px', borderRadius:6, background:'rgba(19,161,165,0.08)', color:'#13a1a5', fontSize:'.72rem', fontWeight:700, textDecoration:'none' }}>📘 IndiaBix →</SafeLink>
                   </div>
                 )}
               </div>
@@ -745,14 +907,18 @@ export default function AptitudePage() {
   async function fetchQuestions({ topic, subtopic, shuffle, difficulty, topics, count }) {
     setLoad(true);
     try {
-      const params=new URLSearchParams({limit:count||20});
+      const params=new URLSearchParams({ limit: count || 20 });
       if(topic)params.set('topic',topic);
       if(subtopic)params.set('subtopic',subtopic);
-      if(shuffle)params.set('shuffle','1');
       if(difficulty&&difficulty!=='All')params.set('difficulty',difficulty);
-      if(topics?.length>1)params.set('topics',topics.join(','));
+      if(topics?.length>=1)params.set('topics',topics.join(','));
       const d=await fetch(`${API}/aptitude/set?${params}`,{headers:tk()}).then(r=>r.json());
-      return d.questions||[];
+      if(d.available===0){
+        alert('No questions found for this topic/subtopic. Please try a different selection or ask your admin to seed more questions.');
+        return [];
+      }
+      // Always shuffle options so correct answer is never predictably first
+      return (d.questions||[]).map(shuffleOptions);
     } catch(e){return[];} finally{setLoad(false);}
   }
 

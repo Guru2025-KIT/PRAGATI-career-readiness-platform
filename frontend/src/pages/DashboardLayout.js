@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+
 const API = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const tk  = () => ({ Authorization: `Bearer ${localStorage.getItem('pragati_token')}` });
 
@@ -32,6 +33,22 @@ export default function DashboardLayout() {
   const nav = useNavigate();
   const [open, setOpen] = useState(true);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('pragati_dark') === '1');
+  const [showNotif, setShowNotif]   = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
+  const [notifList, setNotifList]   = useState([]);
+
+  // Fetch announcements for bell icon
+  React.useEffect(() => {
+    const lastSeen = localStorage.getItem('pragati_notif_seen') || '0';
+    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/announcements`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('pragati_token')}` }
+    }).then(r=>r.json()).then(d=>{
+      const all = d.announcements || [];
+      setNotifList(all);
+      const unseen = all.filter(a => new Date(a.createdAt) > new Date(parseInt(lastSeen)));
+      setNotifCount(unseen.length);
+    }).catch(()=>{});
+  }, []);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [dropOpen, setDropOpen] = useState(false);
@@ -254,6 +271,36 @@ export default function DashboardLayout() {
         <header style={{ height:58, background:headerBg, borderBottom:`1px solid ${headerBrd}`, display:'flex', alignItems:'center', padding:'0 24px', gap:12, position:'sticky', top:0, zIndex:10, boxShadow:'0 2px 8px rgba(4,44,93,0.05)' }}>
           <button onClick={()=>setOpen(o=>!o)} style={{ background:'none', border:'none', fontSize:'1.2rem', cursor:'pointer', color:dm?'#94a3b8':'#7a8ba8', padding:4, borderRadius:6 }}>☰</button>
           <div style={{ flex:1 }} />
+
+          {/* ── Bell Notification Icon ──────────────────────────────── */}
+          <div ref={notifRef} style={{ position:'relative' }}>
+            <button onClick={()=>setShowNotif(n=>!n)}
+              style={{ width:36, height:36, borderRadius:10, border:`1px solid ${headerBrd}`, background:dm?'rgba(255,255,255,0.06)':'rgba(4,44,93,0.04)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.1rem', position:'relative' }}
+              title="Notifications">
+              🔔
+              {notifCount>0&&<span style={{ position:'absolute', top:-4, right:-4, width:18, height:18, borderRadius:'50%', background:'#ef4444', color:'#fff', fontSize:'.6rem', fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #fff' }}>{notifCount>9?'9+':notifCount}</span>}
+            </button>
+            {showNotif&&(
+              <div style={{ position:'absolute', top:44, right:0, width:320, background:dm?'#1e2a3b':'#fff', border:`1px solid ${headerBrd}`, borderRadius:14, boxShadow:'0 8px 32px rgba(0,0,0,0.15)', zIndex:200, overflow:'hidden' }}>
+                <div style={{ padding:'12px 16px', borderBottom:`1px solid ${headerBrd}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontWeight:800, fontSize:'.88rem', color:dm?'#e2e8f0':'#0f1a2e', fontFamily:"'Syne',sans-serif" }}>🔔 Notifications</span>
+                  <button onClick={()=>{ setNotifCount(0); localStorage.setItem('pragati_notif_seen', Date.now()); setShowNotif(false); }}
+                    style={{ fontSize:'.65rem', color:'#531697', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>Mark all read</button>
+                </div>
+                <div style={{ maxHeight:300, overflowY:'auto' }}>
+                  {notifList.length>0 ? notifList.map((a,i)=>(
+                    <div key={i} style={{ padding:'10px 16px', borderBottom:`1px solid ${headerBrd}`, background:i===0&&notifCount>0?dm?'rgba(83,22,151,0.08)':'rgba(83,22,151,0.04)':'transparent' }}>
+                      <div style={{ fontWeight:700, fontSize:'.8rem', color:dm?'#e2e8f0':'#0f1a2e', marginBottom:2 }}>{a.title}</div>
+                      <div style={{ fontSize:'.73rem', color:dm?'#94a3b8':'#7a8ba8', lineHeight:1.5 }}>{a.message}</div>
+                      <div style={{ fontSize:'.65rem', color:dm?'#64748b':'#b0bec9', marginTop:3 }}>{new Date(a.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                    </div>
+                  )) : (
+                    <div style={{ padding:'24px 16px', textAlign:'center', color:dm?'#64748b':'#b0bec9', fontSize:'.82rem' }}>No notifications yet</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Dark mode toggle */}
           <button onClick={toggleDark} title={dm?'Light Mode':'Dark Mode'}

@@ -401,8 +401,9 @@ function StudentDash() {
   }
 
   if (loading) return (
-    <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
-      <div style={{ width:36, height:36, border:'3px solid #e8edf5', borderTopColor:'#531697', borderRadius:'50%', animation:'_s .7s linear infinite' }}/>
+    <div style={{ display:'flex', justifyContent:'center', alignItems:'center', minHeight:'60vh', flexDirection:'column', gap:12 }}>
+      <div style={{ width:40, height:40, border:'3px solid #e8edf5', borderTopColor:'#531697', borderRadius:'50%', animation:'_s .7s linear infinite' }}/>
+      <div style={{ color:'#b0bec9', fontSize:'.82rem' }}>Loading your dashboard…</div>
       <style>{`@keyframes _s{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
@@ -415,326 +416,382 @@ function StudentDash() {
   const currentQ = allIpQs[ipQIdx];
 
   return (
-    <div style={{ fontFamily:"'Nunito',sans-serif" }}>
+    <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:1200, margin:'0 auto' }}>
       {showEditProfile && <EditProfileModal user={user} onClose={()=>setShowEditProfile(false)} onSaved={u=>{ if(setUser) setUser(u); load(); }} />}
       {showLeaderboard && <LeaderboardModal onClose={()=>setShowLeaderboard(false)} myId={data?.user?._id||ctxUser?._id} />}
 
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18, flexWrap:'wrap', gap:10 }}>
+      {/* ── PAGE HEADER ───────────────────────────────────────────────── */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10 }}>
         <div>
-          <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', color:'#0f1a2e' }}>Hello, {user?.name?.split(' ')[0]||'Student'} 👋</h1>
-          <p style={{ color:'#7a8ba8', marginTop:3 }}>Your placement readiness at a glance.</p>
+          <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.6rem', color:'#0f1a2e', margin:0 }}>
+            Hello, {user?.name?.split(' ')[0]||'Student'} 👋
+          </h1>
+          <p style={{ color:'#7a8ba8', marginTop:4, fontSize:'.88rem' }}>
+            {new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
+          </p>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={()=>setShowLeaderboard(true)} style={{ padding:'8px 16px', borderRadius:10, border:'1.5px solid rgba(83,22,151,.25)', background:'rgba(83,22,151,.06)', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.82rem', display:'flex', alignItems:'center', gap:6 }}>
-            🏆 My Leaderboard
+          <button onClick={()=>setShowLeaderboard(true)} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem', display:'flex', alignItems:'center', gap:5 }}>
+            🏆 Leaderboard
           </button>
-          <button onClick={()=>setShowEditProfile(true)} style={{ padding:'8px 16px', borderRadius:10, border:'1.5px solid rgba(83,22,151,.25)', background:'rgba(83,22,151,.06)', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.82rem', display:'flex', alignItems:'center', gap:6 }}>
+          <button onClick={()=>setShowEditProfile(true)} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid rgba(19,161,165,.2)', background:'rgba(19,161,165,.05)', color:'#13a1a5', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem', display:'flex', alignItems:'center', gap:5 }}>
             ✏️ Edit Profile
           </button>
         </div>
       </div>
 
-      {/* ── TOP: Announcements + Leaderboard Top 3 ─────────────────── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14 }}>
-        {/* Announcements */}
-        {announcements.length > 0 ? (
-          <div className="card" style={{ padding:'16px 18px' }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', color:'#0f1a2e', marginBottom:10 }}>📢 Announcements</div>
-            {announcements.slice(0,3).map(a => {
-              const pc = { urgent:'#ef4444', high:'#f59e0b', normal:'#531697' };
-              const bg = { urgent:'rgba(239,68,68,0.06)', high:'rgba(245,158,11,0.06)', normal:'rgba(83,22,151,0.04)' };
-              return (
-                <div key={a._id} style={{ padding:'9px 12px', borderRadius:8, marginBottom:6, border:`1px solid ${(pc[a.priority||'normal'])}25`, background:bg[a.priority||'normal'] }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:2 }}>
-                    <span style={{ fontWeight:800, fontSize:'.83rem', color:'#0f1a2e' }}>{a.title}</span>
-                    {a.priority && a.priority!=='normal' && <span style={{ padding:'1px 5px', borderRadius:999, background:`${pc[a.priority]}15`, color:pc[a.priority], fontSize:'.6rem', fontWeight:700 }}>{a.priority.toUpperCase()}</span>}
-                  </div>
-                  <div style={{ fontSize:'.77rem', color:'#3d4e6b', lineHeight:1.5 }}>{a.message}</div>
-                  {a.link && <a href={a.link} target="_blank" rel="noopener noreferrer" style={{ fontSize:'.72rem', color:'#531697', fontWeight:700, marginTop:3, display:'inline-block' }}>🔗 View Link →</a>}
-                </div>
-              );
-            })}
+      {/* ── URGENT ANNOUNCEMENTS ────────────────────────────────────────── */}
+      {announcements.filter(a=>a.priority==='urgent').map(a=>(
+        <div key={a._id} style={{ padding:'10px 16px', borderRadius:10, background:'rgba(239,68,68,0.07)', border:'1.5px solid rgba(239,68,68,0.25)', marginBottom:10, display:'flex', alignItems:'center', gap:10 }}>
+          <span style={{ fontSize:'1.1rem' }}>🚨</span>
+          <div style={{ flex:1 }}>
+            <span style={{ fontWeight:800, color:'#991b1b', fontSize:'.85rem' }}>{a.title}: </span>
+            <span style={{ color:'#7a8ba8', fontSize:'.82rem' }}>{a.message}</span>
           </div>
-        ) : (
-          <div className="card" style={{ padding:'16px 18px', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <div style={{ textAlign:'center', color:'#b0bec9', fontSize:'.82rem' }}>📢 No announcements yet</div>
-          </div>
-        )}
-
-        {/* Leaderboard Top 3 */}
-        <div className="card" style={{ padding:'16px 18px' }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', color:'#0f1a2e' }}>🏆 Top 3 Leaderboard</div>
-            <button onClick={()=>setShowLeaderboard(true)} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.06)', color:'#531697', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>View All →</button>
-          </div>
-          {leaderboard.slice(0,3).map((s,i) => {
-            const medals = ['🥇','🥈','🥉'];
-            const isMe = s._id === (data?.user?._id || ctxUser?._id);
-            return (
-              <div key={s._id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:9, marginBottom:5, background:isMe?'rgba(83,22,151,0.06)':'#fafbff', border:isMe?'1.5px solid rgba(83,22,151,0.2)':'1px solid #f0f3fa' }}>
-                <div style={{ fontSize:'1.2rem', flexShrink:0 }}>{medals[i]}</div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontWeight:700, fontSize:'.83rem', color:'#0f1a2e' }}>{s.name} {isMe&&<span style={{ color:'#531697', fontSize:'.68rem' }}>(you)</span>}</div>
-                  <div style={{ fontSize:'.67rem', color:'#b0bec9' }}>{s.department} · 🔥{s.streak}d</div>
-                </div>
-                <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', background:'linear-gradient(135deg,#531697,#13a1a5)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{s.totalScore}</div>
-              </div>
-            );
-          })}
-          {leaderboard.length === 0 && <div style={{ textAlign:'center', padding:'12px 0', color:'#b0bec9', fontSize:'.8rem' }}>No data yet</div>}
+          {a.link&&<a href={a.link} target="_blank" rel="noreferrer" style={{ color:'#991b1b', fontWeight:700, fontSize:'.75rem', textDecoration:'none' }}>View →</a>}
         </div>
-      </div>
+      ))}
 
+      {/* ── UPLOAD PROMPT ──────────────────────────────────────────────── */}
       {!user?.resumeUrl && (
-        <div onClick={()=>nav('/dashboard/skillpath')} style={{ background:'rgba(83,22,151,0.05)', border:'1.5px solid rgba(83,22,151,.15)', borderRadius:12, padding:'12px 16px', marginBottom:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div onClick={()=>nav('/dashboard/skillpath')} style={{ background:'linear-gradient(135deg,rgba(83,22,151,0.06),rgba(19,161,165,0.06))', border:'1.5px dashed rgba(83,22,151,.25)', borderRadius:12, padding:'12px 18px', marginBottom:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div>
-            <div style={{ fontWeight:800, color:'#531697', fontSize:'.88rem' }}>📄 Upload resume to unlock SkillPath AI →</div>
-            <div style={{ fontSize:'.74rem', color:'#7a8ba8', marginTop:2 }}>Get ATS score, skill gaps, and personalised learning pathway</div>
+            <div style={{ fontWeight:800, color:'#531697', fontSize:'.88rem' }}>📄 Upload your resume to unlock personalised insights</div>
+            <div style={{ fontSize:'.75rem', color:'#7a8ba8', marginTop:2 }}>Get ATS score, skill gaps, company readiness and learning pathway</div>
           </div>
-          <span style={{ color:'#531697', fontWeight:800 }}>Upload →</span>
+          <div style={{ padding:'6px 14px', borderRadius:8, background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, fontSize:'.78rem', flexShrink:0 }}>Start Now →</div>
         </div>
       )}
 
-      {/* Stats */}
+      {/* ── KPI STATS ROW ────────────────────────────────────────────── */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:14 }}>
-        <Stat icon="🔥" label="Day Streak" value={streak} sub="Keep going!" grad="linear-gradient(135deg,#f59e0b,#ef4444)"/>
-        <Stat icon="💻" label="Solved" value={solved} sub="Total problems" grad="linear-gradient(135deg,#531697,#13a1a5)" onClick={()=>nav('/dashboard/problems')}/>
-        <Stat icon="📊" label="ATS Score" value={ats?`${ats}/100`:'—'} sub={ats?confidenceLabel:'Upload resume'} grad="linear-gradient(135deg,#042c5d,#531697)" onClick={()=>nav('/dashboard/skillpath')}/>
-        <Stat icon="⭐" label="Skill Level" value={lvl} sub="From analysis" grad={`linear-gradient(135deg,${lc[lvl]||'#531697'},#13a1a5)`}/>
+        {[
+          { icon:'🔥', label:'Day Streak', value:streak, sub:streak>0?`${streak} day${streak!==1?'s':''} running!`:'Start today!', grad:'linear-gradient(135deg,#f59e0b,#ef4444)', onClick:()=>nav('/dashboard/problems') },
+          { icon:'💻', label:'Problems Solved', value:solved, sub:'Total across all time', grad:'linear-gradient(135deg,#531697,#13a1a5)', onClick:()=>nav('/dashboard/problems') },
+          { icon:'📊', label:'ATS Score', value:ats?`${ats}/100`:'—', sub:ats?confidenceLabel:'Upload resume', grad:'linear-gradient(135deg,#042c5d,#531697)', onClick:()=>nav('/dashboard/skillpath') },
+          { icon:'⭐', label:'Skill Level', value:lvl, sub:`Based on latest analysis`, grad:`linear-gradient(135deg,${lc[lvl]||'#531697'},#13a1a5)` },
+        ].map(s=>(
+          <div key={s.label} onClick={s.onClick} style={{ background:'#fff', borderRadius:14, padding:'14px 16px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa', cursor:s.onClick?'pointer':'default', transition:'transform .15s, box-shadow .15s' }}
+            onMouseOver={e=>{ if(s.onClick){ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 6px 20px rgba(83,22,151,0.1)'; }}}
+            onMouseOut={e=>{ e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'; }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+              <div style={{ width:34, height:34, borderRadius:9, background:s.grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>{s.icon}</div>
+              <div style={{ fontSize:'.7rem', color:'#b0bec9', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>{s.label}</div>
+            </div>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', color:'#0f1a2e', lineHeight:1 }}>{s.value}</div>
+            <div style={{ fontSize:'.7rem', color:'#7a8ba8', marginTop:4 }}>{s.sub}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Row 2: Quick actions + SkillPath */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-        <div className="card" style={{ padding:'16px 18px' }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:10, color:'#0f1a2e' }}>⚡ Quick Actions</div>
-          {[
-            { icon:'💻', label:"Today's coding problem", to:'/dashboard/problems', g:'linear-gradient(135deg,#531697,#13a1a5)' },
-            { icon:'🧠', label:'SkillPath AI Analysis', to:'/dashboard/skillpath', g:'linear-gradient(135deg,#042c5d,#531697)' },
-            { icon:'🏢', label:'Browse companies', to:'/dashboard/companies', g:'linear-gradient(135deg,#13a1a5,#47d372)' },
-            { icon:'🎯', label:'Aptitude quiz', to:'/dashboard/aptitude', g:'linear-gradient(135deg,#3b82f6,#531697)' },
-            { icon:'📚', label:'Faculty notes', to:'/dashboard/notes', g:'linear-gradient(135deg,#f59e0b,#ef4444)' },
-          ].map(a=>(
-            <button key={a.to} onClick={()=>nav(a.to)} style={{ width:'100%', display:'flex', alignItems:'center', gap:9, padding:'8px 10px', borderRadius:9, border:'1px solid #e8edf5', background:'#fafbff', cursor:'pointer', marginBottom:5, textAlign:'left', transition:'all .15s' }}
-              onMouseOver={e=>{e.currentTarget.style.borderColor='rgba(83,22,151,.25)'; e.currentTarget.style.background='rgba(83,22,151,.02)'}}
-              onMouseOut={e=>{e.currentTarget.style.borderColor='#e8edf5'; e.currentTarget.style.background='#fafbff'}}>
-              <div style={{ width:28, height:28, borderRadius:7, background:a.g, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.82rem', flexShrink:0 }}>{a.icon}</div>
-              <span style={{ fontSize:'.8rem', fontWeight:700, color:'#0f1a2e', flex:1 }}>{a.label}</span>
-              <span style={{ color:'#d0d7e8' }}>→</span>
-            </button>
-          ))}
-        </div>
+      {/* ── ROW 2: SKILLPATH + QUICK ACTIONS ─────────────────────────── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1.6fr 1fr', gap:12, marginBottom:12 }}>
 
-        <div className="card" style={{ padding:'16px 18px' }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:10, color:'#0f1a2e' }}>🧠 Latest SkillPath</div>
+        {/* Latest SkillPath */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>🧠 Latest SkillPath Analysis</div>
+            <button onClick={()=>nav('/dashboard/skillpath')} style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.73rem' }}>New →</button>
+          </div>
           {result ? (
             <>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7, marginBottom:10 }}>
-                {[['ATS',`${result.atsScore}/100`,'#531697'],['Eligibility',`${result.eligibilityPercent}%`,'#13a1a5'],['Level',result.proficiencyLevel,'#042c5d'],['Skills',result.parsedSkills?.length||0,'#47d372']].map(([l,v,c])=>(
-                  <div key={l} style={{ padding:'8px 10px', background:'#f8f9fc', borderRadius:8 }}>
-                    <div style={{ fontSize:'.6rem', color:'#b0bec9', fontWeight:700 }}>{l}</div>
-                    <div style={{ fontWeight:800, color:c, fontSize:'.9rem', marginTop:2 }}>{v}</div>
+              {/* ATS Score bar */}
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:14 }}>
+                <div style={{ position:'relative', width:64, height:64, flexShrink:0 }}>
+                  <svg viewBox="0 0 64 64" style={{ width:64, height:64, transform:'rotate(-90deg)' }}>
+                    <circle cx="32" cy="32" r="26" fill="none" stroke="#f0f3fa" strokeWidth="8"/>
+                    <circle cx="32" cy="32" r="26" fill="none" strokeWidth="8"
+                      stroke={ats>=70?'#47d372':ats>=50?'#f59e0b':'#ef4444'}
+                      strokeDasharray={`${(ats/100)*163.4} 163.4`}
+                      strokeLinecap="round"/>
+                  </svg>
+                  <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', color:'#0f1a2e' }}>{ats}</div>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontWeight:700, color:'#0f1a2e', fontSize:'.88rem', marginBottom:3 }}>{result.jobTitle||'Role'}</div>
+                  <div style={{ fontSize:'.75rem', color:confidenceColor, fontWeight:700, marginBottom:6 }}>{confidenceLabel}</div>
+                  <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                    {[['Eligibility',`${result.eligibilityPercent||0}%`,'#13a1a5'],['Skills Found',result.parsedSkills?.length||0,'#531697'],['Gaps',result.skillGapAnalysis?.missingSkills?.length||0,'#ef4444']].map(([l,v,c])=>(
+                      <span key={l} style={{ padding:'2px 8px', borderRadius:999, background:`${c}12`, color:c, fontSize:'.68rem', fontWeight:700 }}>{l}: {v}</span>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-              {/* Consistent label — based on actual ATS */}
-              <div style={{ padding:'8px 12px', borderRadius:8, background:`${ats>=70?'rgba(71,211,114,0.08)':ats>=50?'rgba(245,158,11,0.08)':'rgba(239,68,68,0.06)'}`, marginBottom:10 }}>
-                <div style={{ fontSize:'.78rem', fontWeight:700, color:confidenceColor }}>{confidenceLabel}</div>
-                <div style={{ fontSize:'.7rem', color:'#7a8ba8', marginTop:2 }}>ATS {ats}/100 · {result.skillGapAnalysis?.missingSkills?.length||0} skill gaps to close</div>
-              </div>
+              {/* Skill gap chips */}
+              {result.skillGapAnalysis?.missingSkills?.length > 0 && (
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:'.7rem', fontWeight:700, color:'#b0bec9', marginBottom:5, textTransform:'uppercase', letterSpacing:'0.04em' }}>Top Skill Gaps</div>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
+                    {result.skillGapAnalysis.missingSkills.slice(0,6).map(s=>(
+                      <span key={s} style={{ padding:'2px 8px', borderRadius:999, background:'rgba(239,68,68,0.07)', color:'#991b1b', fontSize:'.7rem', fontWeight:600 }}>− {s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* ATS history mini chart */}
+              {history.length > 1 && (() => {
+                const vals = [...history].sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt)).map(h=>h.atsScore||0);
+                const maxV = Math.max(...vals, 1);
+                const W=260, H=42;
+                const pts = vals.map((v,i)=>({ x:8+(vals.length===1?W-16:(i/(vals.length-1))*(W-16)), y:H-6-((v/maxV)*(H-12)) }));
+                const path = pts.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ');
+                return (
+                  <div style={{ marginBottom:12 }}>
+                    <div style={{ fontSize:'.7rem', fontWeight:700, color:'#b0bec9', marginBottom:4, textTransform:'uppercase', letterSpacing:'0.04em' }}>ATS History ({vals.length} analyses)</div>
+                    <svg viewBox={`0 0 ${W} ${H}`} style={{ width:'100%', height:42 }}>
+                      <defs><linearGradient id="atsg2" x1="0" x2="1"><stop offset="0%" stopColor="#531697"/><stop offset="100%" stopColor="#13a1a5"/></linearGradient></defs>
+                      <path d={`${path} L${pts[pts.length-1].x},${H} L${pts[0].x},${H} Z`} fill="url(#atsg2)" opacity={0.1}/>
+                      <path d={path} fill="none" stroke="url(#atsg2)" strokeWidth={2} strokeLinecap="round"/>
+                      {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r={3} fill="url(#atsg2)"><title>{vals[i]}/100</title></circle>)}
+                    </svg>
+                  </div>
+                );
+              })()}
               <div style={{ display:'flex', gap:6 }}>
-                <button onClick={()=>nav('/dashboard/skillpath')} style={{ flex:1, padding:'8px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.78rem' }}>New Analysis →</button>
-                <button onClick={()=>{setShowIP(s=>!s); if(!ipResult) runInterviewPrep();}} style={{ flex:1, padding:'8px', borderRadius:8, border:`1.5px solid ${showIP?'#531697':'#d0d7e8'}`, background:showIP?'rgba(83,22,151,.06)':'transparent', color:'#531697', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.78rem' }}>🎤 Interview Prep</button>
+                <button onClick={()=>nav('/dashboard/skillpath')} style={{ flex:1, padding:'8px', borderRadius:9, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.78rem' }}>📄 Re-analyse</button>
+                <button onClick={()=>{setShowIP(s=>!s); if(!ipResult) runInterviewPrep();}} style={{ flex:1, padding:'8px', borderRadius:9, border:`1.5px solid ${showIP?'#531697':'#d0d7e8'}`, background:showIP?'rgba(83,22,151,.06)':'transparent', color:'#531697', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.78rem' }}>
+                  🎤 Interview Prep
+                </button>
               </div>
             </>
           ) : (
-            <div style={{ textAlign:'center', padding:'16px 0' }}>
-              <div style={{ fontSize:'2rem', marginBottom:8 }}>🧠</div>
-              <div style={{ fontSize:'.8rem', color:'#b0bec9', marginBottom:10 }}>No analysis yet</div>
-              <button onClick={()=>nav('/dashboard/skillpath')} style={{ padding:'8px 18px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.82rem' }}>Start Now →</button>
+            <div style={{ textAlign:'center', padding:'24px 0' }}>
+              <div style={{ fontSize:'2.5rem', marginBottom:10 }}>🧠</div>
+              <div style={{ fontSize:'.85rem', color:'#b0bec9', marginBottom:14 }}>Upload your resume & paste a JD to get started</div>
+              <button onClick={()=>nav('/dashboard/skillpath')} style={{ padding:'10px 24px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.85rem' }}>Start SkillPath AI →</button>
             </div>
           )}
         </div>
+
+        {/* Quick Actions */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:12, color:'#0f1a2e' }}>⚡ Quick Actions</div>
+          {[
+            { icon:'💻', label:"Today's DSA Problem", sub:'Solve to extend streak', to:'/dashboard/problems', grad:'linear-gradient(135deg,#531697,#13a1a5)' },
+            { icon:'🧠', label:'SkillPath AI', sub:'Resume analysis & gaps', to:'/dashboard/skillpath', grad:'linear-gradient(135deg,#042c5d,#531697)' },
+            { icon:'🏢', label:'Company Research', sub:'JDs, rounds, prep tips', to:'/dashboard/companies', grad:'linear-gradient(135deg,#13a1a5,#47d372)' },
+            { icon:'🎯', label:'Aptitude Practice', sub:'Quiz + GFG/IndiaBix links', to:'/dashboard/aptitude', grad:'linear-gradient(135deg,#3b82f6,#531697)' },
+            { icon:'🎤', label:'Interview Prep', sub:'AI mock interviews', to:'/dashboard/interview', grad:'linear-gradient(135deg,#f59e0b,#ef4444)' },
+            { icon:'📝', label:'Discussions', sub:'Post doubts, get answers', to:'/dashboard/discussions', grad:'linear-gradient(135deg,#10b981,#13a1a5)' },
+          ].map(a=>(
+            <button key={a.to} onClick={()=>nav(a.to)}
+              style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:10, border:'1px solid #f0f3fa', background:'#fafbff', cursor:'pointer', marginBottom:5, textAlign:'left', transition:'all .15s' }}
+              onMouseOver={e=>{ e.currentTarget.style.background='rgba(83,22,151,0.04)'; e.currentTarget.style.borderColor='rgba(83,22,151,0.2)'; }}
+              onMouseOut={e=>{ e.currentTarget.style.background='#fafbff'; e.currentTarget.style.borderColor='#f0f3fa'; }}>
+              <div style={{ width:32, height:32, borderRadius:8, background:a.grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.9rem', flexShrink:0 }}>{a.icon}</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:'.8rem', fontWeight:700, color:'#0f1a2e' }}>{a.label}</div>
+                <div style={{ fontSize:'.67rem', color:'#b0bec9' }}>{a.sub}</div>
+              </div>
+              <span style={{ color:'#d0d7e8', fontSize:'.8rem' }}>›</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Interview Prep Panel */}
+      {/* ── INTERVIEW PREP PANEL ────────────────────────────────────────── */}
       {showIP && (
-        <div className="card" style={{ padding:'20px 22px', marginBottom:12, border:'1.5px solid rgba(83,22,151,.15)' }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:12, color:'#0f1a2e', display:'flex', alignItems:'center', gap:8 }}>
-            🎤 AI Interview Prep
-            <span style={{ padding:'2px 8px', borderRadius:999, background:'rgba(83,22,151,.08)', color:'#531697', fontSize:'.68rem', fontWeight:700 }}>Gemini 2.0 Flash</span>
-          </div>
-          {ipLoading && <div style={{ textAlign:'center', padding:20, color:'#7a8ba8' }}>⏳ Generating your personalised prep guide…</div>}
-          {ipError && (
-            <div style={{ padding:'10px 14px', background:'#fee2e2', borderRadius:8, fontSize:'.82rem', color:'#991b1b', fontWeight:600, marginBottom:12 }}>
-              {ipError}
-              <div style={{ marginTop:6, fontSize:'.72rem', color:'#7a8ba8' }}>
-                Check: Open <code>http://localhost:5000/api/skillpath/gemini-status</code> in browser to diagnose Gemini connectivity.
-              </div>
+        <div style={{ background:'#fff', borderRadius:14, padding:'20px 22px', marginBottom:12, boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1.5px solid rgba(83,22,151,.15)' }}>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:12, color:'#0f1a2e', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              🎤 AI Interview Prep
+              <span style={{ padding:'2px 8px', borderRadius:999, background:'rgba(83,22,151,.08)', color:'#531697', fontSize:'.68rem', fontWeight:700 }}>Gemini AI</span>
             </div>
-          )}
+            <button onClick={()=>setShowIP(false)} style={{ width:24, height:24, borderRadius:'50%', border:'1px solid #d0d7e8', background:'transparent', cursor:'pointer', color:'#b0bec9', fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.8rem' }}>✕</button>
+          </div>
+          {ipLoading && <div style={{ textAlign:'center', padding:20, color:'#7a8ba8' }}>⏳ Generating personalised prep guide…</div>}
+          {ipError && <div style={{ padding:'10px 14px', background:'#fee2e2', borderRadius:8, fontSize:'.82rem', color:'#991b1b', fontWeight:600 }}>{ipError}</div>}
           {ipResult && !ipLoading && (
-            <div>
-              {/* Coaching summary */}
+            <>
               <div style={{ padding:'12px 14px', background:'rgba(83,22,151,.04)', borderRadius:10, marginBottom:14, fontSize:'.83rem', color:'#3d4e6b', lineHeight:1.65 }}>
                 💬 <strong>Coach:</strong> {ipResult.coaching_summary}
               </div>
-
-              {/* Interactive Q&A */}
               {currentQ && (
                 <div style={{ marginBottom:14 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
                     <span style={{ padding:'2px 8px', borderRadius:999, background:'rgba(83,22,151,.08)', color:'#531697', fontSize:'.7rem', fontWeight:700 }}>{currentQ.type}</span>
                     <span style={{ fontSize:'.73rem', color:'#b0bec9' }}>Q {ipQIdx+1} of {allIpQs.length}</span>
+                    <div style={{ flex:1, height:4, background:'#f0f3fa', borderRadius:999 }}>
+                      <div style={{ height:'100%', width:`${((ipQIdx+1)/allIpQs.length)*100}%`, background:'linear-gradient(90deg,#531697,#13a1a5)', borderRadius:999 }}/>
+                    </div>
                   </div>
-                  <div style={{ fontWeight:700, fontSize:'.9rem', color:'#0f1a2e', marginBottom:10, lineHeight:1.5 }}>{currentQ.question}</div>
-                  {currentQ.tip && <div style={{ fontSize:'.75rem', color:'#7a8ba8', marginBottom:10, fontStyle:'italic' }}>💡 Tip: {currentQ.tip}</div>}
-
-                  {/* Voice + text answer */}
+                  <div style={{ fontWeight:700, fontSize:'.9rem', color:'#0f1a2e', marginBottom:8, lineHeight:1.5 }}>{currentQ.question}</div>
+                  {currentQ.tip && <div style={{ fontSize:'.75rem', color:'#7a8ba8', marginBottom:10, fontStyle:'italic', padding:'6px 10px', background:'rgba(245,158,11,0.06)', borderRadius:6 }}>💡 {currentQ.tip}</div>}
                   <div style={{ position:'relative' }}>
-                    <textarea value={ipAnswer} onChange={e=>setIpAnswer(e.target.value)} rows={4}
-                      placeholder="Type your answer here, or use the 🎙️ voice button…"
-                      style={{ width:'100%', padding:'10px 50px 10px 12px', borderRadius:10, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', resize:'vertical', outline:'none' }}/>
+                    <textarea value={ipAnswer} onChange={e=>setIpAnswer(e.target.value)} rows={3}
+                      placeholder="Type your answer here…"
+                      style={{ width:'100%', padding:'10px 50px 10px 12px', borderRadius:10, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', resize:'vertical', outline:'none', boxSizing:'border-box' }}/>
                     <button type="button" onClick={()=>{
                       if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('Voice requires Chrome');return;}
-                      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-                      const rec=new SR(); rec.lang='en-IN'; rec.interimResults=false;
-                      rec.onresult=e=>setIpAnswer(a=>a+' '+e.results[0][0].transcript);
-                      rec.start();
-                    }} style={{ position:'absolute', right:10, top:10, width:32, height:32, borderRadius:'50%', border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', cursor:'pointer', fontSize:'.85rem', display:'flex', alignItems:'center', justifyContent:'center' }}>🎙️</button>
+                      const SR=window.SpeechRecognition||window.webkitSpeechRecognition; const rec=new SR(); rec.lang='en-IN'; rec.interimResults=false;
+                      rec.onresult=e=>setIpAnswer(a=>a+' '+e.results[0][0].transcript); rec.start();
+                    }} style={{ position:'absolute', right:10, top:8, width:32, height:32, borderRadius:'50%', border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', cursor:'pointer', fontSize:'.85rem' }}>🎙️</button>
                   </div>
-
-                  {ipResult._feedback && (
-                    <div style={{ marginTop:10, padding:'10px 14px', background:'rgba(71,211,114,.06)', border:'1px solid rgba(71,211,114,.2)', borderRadius:8, fontSize:'.82rem', color:'#166534', lineHeight:1.6, whiteSpace:'pre-wrap' }}>{ipResult._feedback}</div>
-                  )}
+                  {ipResult._feedback && <div style={{ marginTop:8, padding:'10px 14px', background:'rgba(71,211,114,.06)', border:'1px solid rgba(71,211,114,.2)', borderRadius:8, fontSize:'.82rem', color:'#166534', lineHeight:1.6 }}>{ipResult._feedback}</div>}
                   <button onClick={submitAnswer} disabled={!ipAnswer.trim()}
-                    style={{ marginTop:10, padding:'9px 20px', borderRadius:9, border:'none', background:ipAnswer.trim()?'linear-gradient(135deg,#531697,#13a1a5)':'#d0d7e8', color:'#fff', fontWeight:800, cursor:ipAnswer.trim()?'pointer':'not-allowed', fontFamily:"'Nunito',sans-serif", fontSize:'.82rem' }}>
+                    style={{ marginTop:8, padding:'8px 20px', borderRadius:9, border:'none', background:ipAnswer.trim()?'linear-gradient(135deg,#531697,#13a1a5)':'#d0d7e8', color:'#fff', fontWeight:800, cursor:ipAnswer.trim()?'pointer':'not-allowed', fontFamily:"'Nunito',sans-serif", fontSize:'.82rem' }}>
                     Submit & Get Feedback →
                   </button>
                 </div>
               )}
-
-              {/* Quick wins */}
               {ipResult.quick_wins?.length > 0 && (
-                <div>
-                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.8rem', color:'#3d4e6b', marginBottom:8 }}>⚡ QUICK WINS</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
                   {ipResult.quick_wins.map((w,i)=>(
-                    <div key={i} style={{ display:'flex', gap:6, alignItems:'flex-start', marginBottom:5 }}>
+                    <div key={i} style={{ display:'flex', gap:6, padding:'7px 10px', background:'rgba(71,211,114,0.05)', borderRadius:8, border:'1px solid rgba(71,211,114,0.15)' }}>
                       <span style={{ color:'#47d372', fontWeight:800, flexShrink:0 }}>✓</span>
-                      <span style={{ fontSize:'.78rem', color:'#3d4e6b' }}>{w}</span>
+                      <span style={{ fontSize:'.75rem', color:'#3d4e6b' }}>{w}</span>
                     </div>
                   ))}
                 </div>
               )}
-              <button onClick={runInterviewPrep} style={{ marginTop:12, padding:'7px 16px', borderRadius:8, border:'1.5px solid #d0d7e8', background:'transparent', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.78rem' }}>🔄 Regenerate</button>
-            </div>
+              <button onClick={runInterviewPrep} style={{ marginTop:10, padding:'6px 14px', borderRadius:8, border:'1.5px solid #d0d7e8', background:'transparent', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.75rem' }}>🔄 Regenerate</button>
+            </>
           )}
         </div>
       )}
 
-      {/* ATS + Batch row */}
+      {/* ── ROW 3: COMPANY READINESS + BATCH RANK ─────────────────────── */}
       <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:12, marginBottom:12 }}>
-        {/* ATS history */}
-        <div className="card" style={{ padding:'16px 18px' }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:10, color:'#0f1a2e' }}>📈 ATS Score History</div>
-          {history.length > 0 ? (() => {
-            const sorted = [...history].sort((a,b)=>new Date(a.analyzedAt||a.createdAt)-new Date(b.analyzedAt||b.createdAt));
-            const vals = sorted.map(h=>h.atsScore||0);
-            const maxV = Math.max(...vals, 1);
-            const W=280, H=60, pad=8;
-            const pts = vals.map((v,i)=>({ x:pad+(vals.length===1?W-pad*2:(i/(vals.length-1))*(W-pad*2)), y:H-pad-((v/maxV)*(H-pad*2)) }));
-            const path = pts.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ');
-            const latest = vals[vals.length-1];
-            const prev   = vals.length>1?vals[vals.length-2]:null;
-            return (
-              <div>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                  <span style={{ fontSize:'.72rem', color:'#7a8ba8' }}>{vals.length} {vals.length===1?'analysis':'analyses'}</span>
-                  {prev!==null&&<span style={{ fontSize:'.78rem', fontWeight:700, color:latest>prev?'#47d372':latest<prev?'#ef4444':'#7a8ba8' }}>{latest>prev?'↑':latest<prev?'↓':'→'} Latest: {latest}/100</span>}
-                </div>
-                <svg viewBox={`0 0 ${W} ${H}`} style={{ width:'100%', height:60 }}>
-                  <defs><linearGradient id="atsg" x1="0" x2="1"><stop offset="0%" stopColor="#531697"/><stop offset="100%" stopColor="#13a1a5"/></linearGradient></defs>
-                  {vals.length>1&&<path d={`${path} L${pts[pts.length-1].x},${H} L${pts[0].x},${H} Z`} fill="url(#atsg)" opacity={0.1}/>}
-                  {vals.length>1&&<path d={path} fill="none" stroke="url(#atsg)" strokeWidth={2} strokeLinecap="round"/>}
-                  {pts.map((p,i)=><circle key={i} cx={p.x} cy={p.y} r={3} fill="url(#atsg)"><title>{vals[i]}/100</title></circle>)}
-                </svg>
-              </div>
-            );
-          })() : <div style={{ textAlign:'center', padding:'16px 0', color:'#b0bec9', fontSize:'.8rem' }}>Run SkillPath AI to track your ATS growth</div>}
-        </div>
-        {/* Batch percentile */}
-        <div className="card" style={{ padding:'16px 18px' }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:10, color:'#0f1a2e' }}>🏆 Batch Rank</div>
-          {batchData?.batchSize > 1 ? (
-            <div style={{ textAlign:'center' }}>
-              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'2rem', color:batchData.topPct<=25?'#47d372':batchData.topPct<=50?'#f59e0b':'#ef4444', lineHeight:1 }}>Top {batchData.topPct}%</div>
-              <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginTop:4 }}>of your dept & year</div>
-              <div style={{ marginTop:10, height:7, background:'#f0f3fa', borderRadius:999 }}>
-                <div style={{ height:'100%', width:`${batchData.percentile}%`, background:'linear-gradient(90deg,#531697,#13a1a5)', borderRadius:999 }}/>
-              </div>
-              <div style={{ fontSize:'.68rem', color:'#b0bec9', marginTop:4 }}>{batchData.batchSize} students compared</div>
-            </div>
-          ) : <div style={{ textAlign:'center', padding:'14px 0', color:'#b0bec9', fontSize:'.8rem' }}>More students needed for batch ranking</div>}
-        </div>
-      </div>
 
-      {/* Company Readiness */}
-      {(compReadiness.length > 0 || true) && (
-        <div className="card" style={{ padding:'16px 18px', marginBottom:12 }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:6, color:'#0f1a2e', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span>🏢 Company Readiness Score</span>
+        {/* Company Readiness */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>🏢 Company Readiness</div>
             <div style={{ display:'flex', gap:6 }}>
               <button onClick={async()=>{ const cr=await apiFetch('/analytics/company-readiness'); if(cr?.results) setCompReadiness(cr.results); }}
-                style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#13a1a5', fontWeight:700, fontSize:'.72rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>↻ Refresh</button>
-              <button onClick={()=>nav('/dashboard/companies')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#531697', fontWeight:700, fontSize:'.72rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>View all →</button>
+                style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#13a1a5', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>↻</button>
+              <button onClick={()=>nav('/dashboard/companies')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#531697', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>All →</button>
             </div>
           </div>
           <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginBottom:10 }}>
-            Based on your skills ({user?.resumeParsedSkills?.length||0}), ATS {ats}/100, and company JD requirements.
-            {!(user?.resumeParsedSkills?.length) && <span style={{ color:'#f59e0b', fontWeight:700 }}> Upload your resume in SkillPath AI to personalise scores.</span>}
+            {user?.resumeParsedSkills?.length ? `Based on ${user.resumeParsedSkills.length} skills from your resume · ATS ${ats}/100` : <span style={{ color:'#f59e0b', fontWeight:600 }}>⚠️ Upload resume in SkillPath AI to personalise scores</span>}
           </div>
-          {compReadiness.slice(0,6).map(c=>{
+          {compReadiness.length > 0 ? compReadiness.slice(0,6).map(c=>{
             const mc = c.matchScore>=75?'#47d372':c.matchScore>=50?'#f59e0b':'#ef4444';
+            const icon = c.matchScore>=75?'✅':c.matchScore>=50?'⚠️':'❌';
             return (
-              <div key={c.name} style={{ marginBottom:10 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:3 }}>
-                  <div style={{ width:90, fontSize:'.78rem', fontWeight:700, color:'#0f1a2e', flexShrink:0 }}>{c.name}</div>
-                  <div style={{ flex:1, height:7, background:'#f0f3fa', borderRadius:999 }}>
-                    <div style={{ height:'100%', width:`${c.matchScore}%`, background:`linear-gradient(90deg,${mc},#13a1a5)`, borderRadius:999, transition:'width .8s' }}/>
+              <div key={c.name} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:9 }}>
+                <div style={{ width:88, fontSize:'.78rem', fontWeight:700, color:'#0f1a2e', flexShrink:0 }}>{c.name}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
+                    <div style={{ flex:1, height:8, background:'#f0f3fa', borderRadius:999, overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${c.matchScore}%`, background:`linear-gradient(90deg,${mc},#13a1a5)`, borderRadius:999, transition:'width 1s cubic-bezier(.4,0,.2,1)' }}/>
+                    </div>
+                    <div style={{ width:34, textAlign:'right', fontWeight:800, fontSize:'.8rem', color:mc, flexShrink:0 }}>{c.matchScore}%</div>
+                    <div style={{ fontSize:'.75rem', flexShrink:0 }}>{icon}</div>
                   </div>
-                  <div style={{ width:38, textAlign:'right', fontWeight:800, fontSize:'.82rem', color:mc, flexShrink:0 }}>{c.matchScore}%</div>
-                </div>
-                <div style={{ fontSize:'.68rem', color:'#b0bec9', paddingLeft:100 }}>
-                  {c.breakdown.skillMatch} · {c.breakdown.branchStatus}
-                  {c.missingSkills.length>0 && <span style={{ color:'#991b1b' }}> · Gap: {c.missingSkills.slice(0,3).join(', ')}</span>}
+                  {c.missingSkills?.length > 0 && (
+                    <div style={{ fontSize:'.65rem', color:'#991b1b' }}>Gap: {c.missingSkills.slice(0,3).join(', ')}{c.missingSkills.length>3?'…':''}</div>
+                  )}
                 </div>
               </div>
             );
-          })}
+          }) : (
+            <div style={{ textAlign:'center', padding:'20px 0', color:'#b0bec9', fontSize:'.82rem' }}>
+              <div style={{ fontSize:'1.8rem', marginBottom:6 }}>📊</div>
+              Run SkillPath AI analysis to see your company match scores
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Placement Calendar */}
-      {companies.filter(c=>c.campusVisitDate&&new Date(c.campusVisitDate)>new Date()).length>0 && (
-        <div className="card" style={{ padding:'16px 18px' }}>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:12, color:'#0f1a2e' }}>🗓️ Upcoming Drives</div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:10 }}>
-            {companies.filter(c=>c.campusVisitDate&&new Date(c.campusVisitDate)>new Date())
-              .sort((a,b)=>new Date(a.campusVisitDate)-new Date(b.campusVisitDate)).slice(0,4).map(c=>{
-              const days = Math.ceil((new Date(c.campusVisitDate)-new Date())/(1000*60*60*24));
-              const urg = days<=14?'#ef4444':days<=30?'#f59e0b':'#47d372';
+        {/* Batch Rank + Leaderboard Top 3 */}
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          <div style={{ background:'#fff', borderRadius:14, padding:'16px 18px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa', flex:1 }}>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', marginBottom:10, color:'#0f1a2e' }}>🏆 Batch Rank</div>
+            {batchData?.batchSize > 1 ? (
+              <div style={{ textAlign:'center' }}>
+                <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'2.2rem', color:batchData.topPct<=25?'#47d372':batchData.topPct<=50?'#f59e0b':'#ef4444', lineHeight:1 }}>Top {batchData.topPct}%</div>
+                <div style={{ fontSize:'.7rem', color:'#7a8ba8', marginTop:4, marginBottom:10 }}>of {batchData.batchSize} students in your dept</div>
+                <div style={{ height:8, background:'#f0f3fa', borderRadius:999, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:`${batchData.percentile}%`, background:'linear-gradient(90deg,#531697,#13a1a5)', borderRadius:999 }}/>
+                </div>
+              </div>
+            ) : <div style={{ textAlign:'center', color:'#b0bec9', fontSize:'.78rem', padding:'10px 0' }}>More data needed for batch rank</div>}
+          </div>
+          <div style={{ background:'#fff', borderRadius:14, padding:'16px 18px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa', flex:1 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', color:'#0f1a2e' }}>🥇 Top Performers</div>
+              <button onClick={()=>setShowLeaderboard(true)} style={{ padding:'3px 8px', borderRadius:6, border:'1px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, fontSize:'.65rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>All →</button>
+            </div>
+            {leaderboard.slice(0,3).map((s,i)=>{
+              const medals=['🥇','🥈','🥉'];
+              const isMe = s._id===(data?.user?._id||ctxUser?._id);
               return (
-                <div key={c.name} style={{ padding:'12px 14px', borderRadius:10, border:`1.5px solid ${urg}30`, background:`${urg}06` }}>
-                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.4rem', color:urg, lineHeight:1 }}>{days}</div>
-                  <div style={{ fontSize:'.65rem', color:urg, fontWeight:700, marginBottom:4 }}>days</div>
-                  <div style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{c.name}</div>
-                  <div style={{ fontSize:'.7rem', color:'#7a8ba8' }}>{c.difficulty}</div>
+                <div key={s._id} style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 8px', borderRadius:8, marginBottom:4, background:isMe?'rgba(83,22,151,0.06)':'#fafbff', border:isMe?'1.5px solid rgba(83,22,151,0.2)':'1px solid #f0f3fa' }}>
+                  <span style={{ fontSize:'1rem' }}>{medals[i]}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontWeight:700, fontSize:'.78rem', color:'#0f1a2e', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.name}{isMe&&<span style={{ color:'#531697', fontSize:'.62rem' }}> (you)</span>}</div>
+                    <div style={{ fontSize:'.63rem', color:'#b0bec9' }}>🔥{s.streak}d</div>
+                  </div>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', background:'linear-gradient(135deg,#531697,#13a1a5)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{s.totalScore}</div>
                 </div>
               );
             })}
           </div>
         </div>
-      )}
+      </div>
 
+      {/* ── ROW 4: ANNOUNCEMENTS + UPCOMING DRIVES ─────────────────────── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+
+        {/* Announcements */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:12, color:'#0f1a2e' }}>📢 Announcements</div>
+          {announcements.filter(a=>a.priority!=='urgent').length > 0 ? (
+            announcements.filter(a=>a.priority!=='urgent').slice(0,4).map(a=>{
+              const pc={high:'#f59e0b',normal:'#531697'};
+              return (
+                <div key={a._id} style={{ padding:'9px 12px', borderRadius:9, marginBottom:6, border:`1px solid ${(pc[a.priority||'normal'])}20`, background:`${pc[a.priority||'normal']}06` }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:2 }}>
+                    <span style={{ fontWeight:800, fontSize:'.82rem', color:'#0f1a2e' }}>{a.title}</span>
+                    {a.priority==='high'&&<span style={{ padding:'1px 5px', borderRadius:999, background:'rgba(245,158,11,0.15)', color:'#92400e', fontSize:'.6rem', fontWeight:700 }}>HIGH</span>}
+                  </div>
+                  <div style={{ fontSize:'.76rem', color:'#7a8ba8', lineHeight:1.5 }}>{a.message}</div>
+                  {a.link&&<a href={a.link} target="_blank" rel="noreferrer" style={{ fontSize:'.7rem', color:'#531697', fontWeight:700, marginTop:3, display:'inline-block' }}>🔗 View →</a>}
+                </div>
+              );
+            })
+          ) : (
+            <div style={{ textAlign:'center', padding:'20px 0', color:'#b0bec9', fontSize:'.8rem' }}>
+              <div style={{ fontSize:'1.5rem', marginBottom:6 }}>📭</div>
+              No announcements from faculty
+            </div>
+          )}
+        </div>
+
+        {/* Upcoming Drives */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>🗓️ Upcoming Drives</div>
+            <button onClick={()=>nav('/dashboard/companies')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>All Companies →</button>
+          </div>
+          {companies.filter(c=>c.campusVisitDate&&new Date(c.campusVisitDate)>new Date()).length > 0 ? (
+            companies.filter(c=>c.campusVisitDate&&new Date(c.campusVisitDate)>new Date())
+              .sort((a,b)=>new Date(a.campusVisitDate)-new Date(b.campusVisitDate)).slice(0,4).map(c=>{
+              const days = Math.ceil((new Date(c.campusVisitDate)-new Date())/(1000*60*60*24));
+              const urg = days<=7?'#ef4444':days<=30?'#f59e0b':'#47d372';
+              return (
+                <div key={c.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:9, marginBottom:6, background:`${urg}06`, border:`1px solid ${urg}20` }}>
+                  {c.logoUrl && <img src={c.logoUrl} alt={c.name} style={{ width:28, height:28, objectFit:'contain', borderRadius:6, background:'#fff', padding:2 }} onError={e=>e.target.style.display='none'}/>}
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{c.name}</div>
+                    <div style={{ fontSize:'.68rem', color:'#7a8ba8' }}>{new Date(c.campusVisitDate).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.2rem', color:urg, lineHeight:1 }}>{days}</div>
+                    <div style={{ fontSize:'.62rem', color:urg, fontWeight:600 }}>days</div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div style={{ textAlign:'center', padding:'20px 0', color:'#b0bec9', fontSize:'.8rem' }}>
+              <div style={{ fontSize:'1.5rem', marginBottom:6 }}>🏢</div>
+              No upcoming drives scheduled
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

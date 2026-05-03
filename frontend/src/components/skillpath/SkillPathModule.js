@@ -165,18 +165,62 @@ function AnalysisResults({ dbResult, full, onNewAnalysis }) {
             {/* ATS breakdown */}
             <div className="card" style={{ padding:'20px 22px' }}>
               <div style={{ fontFamily:"'Syne',sans-serif",fontWeight:800,fontSize:'.9rem',marginBottom:14,color:'#0f1a2e' }}>📊 ATS Breakdown</div>
-              {Object.keys(atsBreak).length>0 ? (
-                Object.entries(atsBreak).filter(([k])=>k!=='total_score').map(([k,v])=>(
-                  <Bar key={k} label={k.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())} val={Math.round(Number(v)||0)} max={30} color="linear-gradient(90deg,#531697,#13a1a5)"/>
-                ))
-              ) : (
-                <>
-                  <Bar label="Keyword Match" val={Math.round(ats*0.4)} max={40} color="#531697"/>
-                  <Bar label="Skills Coverage" val={Math.round(ats*0.3)} max={30} color="#13a1a5"/>
-                  <Bar label="Format Quality" val={Math.round(ats*0.2)} max={20} color="#47d372"/>
-                  <Bar label="Experience Match" val={Math.round(ats*0.1)} max={10} color="#f59e0b"/>
-                </>
-              )}
+              {(() => {
+                /* atsBreak can be:
+                   a) Full ML object: {breakdown:{keyword_match:{score,max,label},...}, grade, keyword_hit_rate, ...}
+                   b) Flat DB object: {structure,keywords,skills,projects} (old schema)
+                   c) Empty {} — show proportional bars from ATS score
+                */
+                const breakdown = atsBreak?.breakdown || {};
+                const hasBreakdown = Object.keys(breakdown).length > 0;
+
+                if (hasBreakdown) {
+                  const BAR_COLORS = ['linear-gradient(90deg,#531697,#13a1a5)','linear-gradient(90deg,#13a1a5,#47d372)','linear-gradient(90deg,#f59e0b,#13a1a5)','linear-gradient(90deg,#6366f1,#531697)','linear-gradient(90deg,#ec4899,#f59e0b)'];
+                  return (
+                    <>
+                      {Object.entries(breakdown).map(([k,v],i) => (
+                        <Bar key={k}
+                          label={v?.label || k.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}
+                          val={typeof v==='object' ? (v.score||0) : Math.round(Number(v)||0)}
+                          max={typeof v==='object' ? (v.max||10) : 10}
+                          color={BAR_COLORS[i%BAR_COLORS.length]}/>
+                      ))}
+                      {/* Extra detail rows */}
+                      {atsBreak.grade && <div style={{ marginTop:12, padding:'8px 12px', borderRadius:8, background:'rgba(83,22,151,0.05)', fontSize:'.78rem', color:'#531697', fontWeight:700 }}>Grade: {atsBreak.grade} · Keyword hit rate: {atsBreak.keyword_hit_rate||0}% · Words: {atsBreak.word_count||0}</div>}
+                      {(atsBreak.tips||[]).length>0 && (
+                        <div style={{ marginTop:10 }}>
+                          <div style={{ fontSize:'.72rem', fontWeight:700, color:'#92400e', marginBottom:5 }}>💡 ATS Tips</div>
+                          {(atsBreak.tips||[]).map((t,i)=>(<div key={i} style={{ fontSize:'.73rem', color:'#7a8ba8', marginBottom:3 }}>• {t}</div>))}
+                        </div>
+                      )}
+                      {(atsBreak.missing_critical||[]).length>0 && (
+                        <div style={{ marginTop:8, padding:'7px 10px', borderRadius:8, background:'rgba(239,68,68,0.05)', border:'1px solid rgba(239,68,68,0.15)', fontSize:'.72rem' }}>
+                          <span style={{ fontWeight:700, color:'#991b1b' }}>🔴 Missing Critical: </span>
+                          <span style={{ color:'#7a8ba8' }}>{(atsBreak.missing_critical||[]).join(', ')}</span>
+                        </div>
+                      )}
+                      {(atsBreak.matched_keywords||[]).length>0 && (
+                        <div style={{ marginTop:6, fontSize:'.7rem', color:'#166534', fontWeight:600 }}>
+                          ✅ Matched: {(atsBreak.matched_keywords||[]).slice(0,8).join(', ')}{(atsBreak.matched_keywords||[]).length>8?'…':''}
+                        </div>
+                      )}
+                    </>
+                  );
+                }
+                // Fallback: proportional bars from total ATS score
+                return (
+                  <>
+                    <Bar label="Keyword Match" val={Math.round(ats*0.35)} max={35} color="linear-gradient(90deg,#531697,#13a1a5)"/>
+                    <Bar label="Section Structure" val={Math.round(ats*0.25)} max={25} color="linear-gradient(90deg,#13a1a5,#47d372)"/>
+                    <Bar label="Quantified Achievements" val={Math.round(ats*0.20)} max={20} color="linear-gradient(90deg,#f59e0b,#13a1a5)"/>
+                    <Bar label="Action Verb Usage" val={Math.round(ats*0.10)} max={10} color="linear-gradient(90deg,#6366f1,#531697)"/>
+                    <Bar label="Length & Density" val={Math.round(ats*0.10)} max={10} color="linear-gradient(90deg,#ec4899,#f59e0b)"/>
+                    <div style={{ marginTop:8, fontSize:'.72rem', color:'#b0bec9' }}>
+                      Re-run analysis to get detailed per-section breakdown.
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
