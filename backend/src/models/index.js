@@ -116,7 +116,7 @@ const skillpathResultSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
   jdText: { type: String },
   atsScore: { type: Number },
-  atsBreakdown: { structure: Number, keywords: Number, skills: Number, projects: Number },
+  atsBreakdown: { type: mongoose.Schema.Types.Mixed, default: {} }, // stores full ML breakdown
   eligibilityPercent: { type: Number },
   eligibilityReason: { type: String },
   skillGapAnalysis: {

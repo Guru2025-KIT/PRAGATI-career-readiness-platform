@@ -185,3 +185,17 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
 });
 
 module.exports = router;
+// PATCH /api/companies/:id/drive — faculty/admin sets campus drive date
+router.patch('/:id/drive', authenticate, authorize('faculty', 'admin'), async (req, res) => {
+  try {
+    const { campusVisitDate, driveDetails } = req.body;
+    const update = {};
+    if (campusVisitDate) update.campusVisitDate = new Date(campusVisitDate);
+    if (driveDetails)   update.driveDetails   = driveDetails;
+    const company = await Company.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!company) return res.status(404).json({ error: 'Company not found' });
+    res.json({ message: 'Drive date updated', company });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});

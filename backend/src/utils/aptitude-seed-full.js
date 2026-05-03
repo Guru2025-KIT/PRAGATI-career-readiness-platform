@@ -11,6 +11,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const { AptitudeQuestion } = require('../models'); 
+const TOPIC_SUBTOPICS = {};
 
 console.log("🚀 Script started");
 
