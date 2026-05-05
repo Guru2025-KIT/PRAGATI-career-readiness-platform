@@ -1,5 +1,16 @@
 const mongoose = require('mongoose');
 
+// ─── Placement Drive ─────────────────────────────────────────────
+const placementDriveSchema = new mongoose.Schema({
+  companyName: { type: String, required: true },
+  role: { type: String, default: '' },
+  package: { type: String, default: '' },
+  eligibility: { type: String, default: '' },
+  driveDate: { type: Date },
+  applyLink: { type: String, default: '' },
+  instructions: { type: String, default: '' },
+}, { timestamps: true });
+
 // ─── Company ─────────────────────────────────────────────────────────────────
 const companySchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -192,4 +203,5 @@ module.exports = {
   Announcement:      mongoose.model('Announcement', announcementSchema),
   AptitudeAttempt:   mongoose.model('AptitudeAttempt', aptitudeAttemptSchema),
   DirectMessage:     mongoose.model('DirectMessage', directMessageSchema),
+  PlacementDrive: mongoose.model('PlacementDrive', placementDriveSchema),
 };

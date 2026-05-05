@@ -13,155 +13,173 @@ const SUBTOPIC_META = {
   /* ── Quantitative Aptitude ──────────────────────────────────────────── */
   'Number System':{
     theory:'Covers divisibility rules, LCM/HCF, prime factorization, unit digits, surds & indices.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/number-system-gq/',
+    gfg:'https://www.geeksforgeeks.org/number-system/',
     indiabix:'https://www.indiabix.com/aptitude/numbers/' },
   'Percentages':{
     theory:'Percentages link to profit/loss, discount, interest. Formula: (Part/Whole)×100.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/percentages-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/percentages/',
     indiabix:'https://www.indiabix.com/aptitude/percentage/' },
   'Profit & Loss':{
     theory:'Profit = SP−CP. Profit% = (Profit/CP)×100. Key: Marked Price and successive discounts.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/profit-loss-discount-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/profit-and-loss/',
     indiabix:'https://www.indiabix.com/aptitude/profit-and-loss/' },
   'Simple & Compound Interest':{
     theory:'SI = PRT/100. CI = P(1+r/100)^n − P. Difference CI−SI for 2 yrs = P(r/100)².',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/interest-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/simple-interest/',
     indiabix:'https://www.indiabix.com/aptitude/simple-interest/' },
   'Ratio & Proportion':{
     theory:'a:b = c:d ⟹ ad=bc. Partnership divides profit in ratio of investment × time.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/ratio-proportion-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/ratio-and-proportion/',
     indiabix:'https://www.indiabix.com/aptitude/ratio-and-proportion/' },
   'Averages':{
     theory:'Average = Sum/Count. Weighted average uses proportional weights.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/averages-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/average-in-maths/',
     indiabix:'https://www.indiabix.com/aptitude/average/' },
   'Mixture & Alligation':{
     theory:'Alligation Rule: (Dearer−Mean):(Mean−Cheaper) = ratio of cheaper to dearer.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/mixture-and-alligation-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/mixture-and-alligation/',
     indiabix:'https://www.indiabix.com/aptitude/alligation-or-mixture/' },
   'Time & Work':{
     theory:"If A finishes in n days, A's 1-day work = 1/n. LCM method simplifies multi-person problems.",
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/time-and-work-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/time-and-work/',
     indiabix:'https://www.indiabix.com/aptitude/time-and-work/' },
   'Pipes & Cisterns':{
     theory:'Inlet fills (+ve), outlet drains (−ve). Net rate = sum of all rates.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/pipes-and-cisterns-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/pipes-and-cisterns/',
     indiabix:'https://www.indiabix.com/aptitude/pipes-and-cistern/' },
   'Speed, Time & Distance':{
     theory:'Speed = Distance/Time. Average speed = 2S₁S₂/(S₁+S₂) for equal distances.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/speed-time-distance-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/time-speed-distance/',
     indiabix:'https://www.indiabix.com/aptitude/time-and-distance/' },
   'Boats & Streams':{
     theory:'Downstream = B+S. Upstream = B−S. Still water = (D+U)/2.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/boat-and-streams-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/boats-and-streams/',
     indiabix:'https://www.indiabix.com/aptitude/boats-and-streams/' },
   'Algebra':{
     theory:'Linear/quadratic equations. Sum of roots = −b/a, product = c/a.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/algebra-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/algebra/',
     indiabix:'https://www.indiabix.com/aptitude/problems-on-numbers/' },
   'Progressions':{
     theory:'AP: nth term=a+(n−1)d. GP: nth term=arⁿ⁻¹. HP: reciprocals form AP.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/progressions-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/arithmetic-progressions/',
     indiabix:'https://www.indiabix.com/aptitude/problems-on-numbers/' },
   'Mensuration':{
     theory:'2D: Circle=πr², Triangle=½bh. 3D: Cylinder=πr²h, Cone=πr²h/3, Sphere SA=4πr².',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/mensuration-2d-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/mensuration/',
     indiabix:'https://www.indiabix.com/aptitude/area/' },
   'Permutation & Combination':{
     theory:'nPr = n!/(n−r)! (order matters). nCr = n!/(r!(n−r)!) (order irrelevant).',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/permutation-and-combinations-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/permutation-and-combination/',
     indiabix:'https://www.indiabix.com/aptitude/permutation-and-combination/' },
   'Probability':{
     theory:'P(E) = Favourable/Total. P(A∪B)=P(A)+P(B)−P(A∩B).',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/probability-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/probability/',
     indiabix:'https://www.indiabix.com/aptitude/probability/' },
   'Clocks':{
     theory:'Minute hand gains 5.5°/min over hour hand. They overlap every 720/11 min.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/clock-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/clock-and-calendar/',
     indiabix:'https://www.indiabix.com/aptitude/clock/' },
   'Calendars':{
     theory:'Odd days: 1 ordinary year=1, 1 leap year=2. 100 yrs=5 odd days.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/calendar-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/clock-and-calendar/',
     indiabix:'https://www.indiabix.com/aptitude/calendar/' },
   'Data Interpretation':{
     theory:'Read graphs/tables carefully. For pie charts: segment%×total=value.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/data-interpretation/',
+    gfg:'https://www.geeksforgeeks.org/data-interpretation/',
     indiabix:'https://www.indiabix.com/data-interpretation/table-charts/' },
 
   /* ── Logical Reasoning ──────────────────────────────────────────────── */
   'Seating Arrangement':{
     theory:'Linear: determine positions from conditions. Circular: fix one person. Draw a diagram first.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/seating-arrangement-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/seating-arrangement-reasoning/',
     indiabix:'https://www.indiabix.com/logical-reasoning/seating-arrangement/' },
   'Blood Relations':{
     theory:'Draw a family tree. Common trick: "pointing to photo" problems — trace step by step.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/blood-relations-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/blood-relations/',
     indiabix:'https://www.indiabix.com/logical-reasoning/blood-relation-test/' },
   'Direction Sense':{
     theory:'Track N↑ S↓ E→ W← axes. Final displacement = √(h²+v²).',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/direction-sense-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/direction-sense-test/',
     indiabix:'https://www.indiabix.com/logical-reasoning/direction-sense-test/' },
   'Number Series':{
     theory:'Look for: AP, GP, squares/cubes, alternating series, difference-of-difference patterns.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/number-series-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/number-series/',
     indiabix:'https://www.indiabix.com/logical-reasoning/number-series/' },
   'Letter Series':{
     theory:'Assign A=1…Z=26. Check forward/backward alphabets, alternate positions.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/letter-series-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/letter-series/',
     indiabix:'https://www.indiabix.com/logical-reasoning/alphabet-test/' },
   'Alphanumeric Series':{
     theory:'Solve letter and number positions independently, then combine.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/letter-and-symbol-series/',
+    gfg:'https://www.geeksforgeeks.org/letter-and-symbol-series/',
     indiabix:'https://www.indiabix.com/logical-reasoning/series-completion/' },
   'Coding-Decoding':{
     theory:'Types: letter shift, reverse alphabet, position-based (A=1,B=2…), word reversal.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/coding-decoding-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/coding-decoding/',
     indiabix:'https://www.indiabix.com/logical-reasoning/coding-decoding/' },
   'Syllogism':{
     theory:'Use Venn diagrams. Conclusions must be 100% certain — avoid assumptions.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/syllogism-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/syllogism/',
     indiabix:'https://www.indiabix.com/logical-reasoning/statement-and-conclusion/' },
   'Statements & Conclusions':{
     theory:'A conclusion must logically follow — no external assumptions. Do not over-generalise.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/statement-and-conclusion-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/statement-and-conclusion/',
     indiabix:'https://www.indiabix.com/logical-reasoning/statement-and-conclusion/' },
   'Mirror Images':{
     theory:'Vertical mirror flips left-right. Letters unchanged: A,H,I,M,O,T,U,V,W,X,Y.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/mirror-images-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/mirror-and-water-images/',
     indiabix:'https://www.indiabix.com/non-verbal-reasoning/mirror-images/' },
   'Odd One Out':{
     theory:'Find item that does not belong by category, property, series pattern, or shape.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/odd-one-out-aptitude-gq/',
+    gfg:'https://www.geeksforgeeks.org/odd-one-out/',
     indiabix:'https://www.indiabix.com/verbal-reasoning/classification/' },
 
   /* ── Verbal Ability ─────────────────────────────────────────────────── */
   'Synonyms & Antonyms':{
     theory:'Build vocab daily. Antonyms: look for prefixes un-, dis-, in-, im-, non-.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/verbal-ability-gq/',
+    gfg:'https://www.geeksforgeeks.org/synonyms-and-antonyms/',
     indiabix:'https://www.indiabix.com/verbal-ability/synonyms/' },
   'Grammar':{
     theory:'Subject-verb agreement, tenses, articles (a/an/the), prepositions, active/passive voice.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/grammar-verbal-ability-gq/',
+    gfg:'https://www.geeksforgeeks.org/english-grammar/',
     indiabix:'https://www.indiabix.com/verbal-ability/spotting-errors/' },
   'One Word Substitution':{
     theory:'Learn phobias, -logy (study of), -phile (lover of), government types.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/one-word-substitution/',
+    gfg:'https://www.geeksforgeeks.org/one-word-substitution/',
     indiabix:'https://www.indiabix.com/verbal-ability/one-word-substitutes/' },
   'Idioms & Phrases':{
     theory:'Idioms have non-literal meanings. "kick the bucket"=die, "bite the bullet"=endure bravely.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/idioms-and-phrases/',
+    gfg:'https://www.geeksforgeeks.org/idioms-and-phrases/',
     indiabix:'https://www.indiabix.com/verbal-ability/idioms-and-phrases/' },
   'Para Jumbles':{
     theory:'Find opening sentence (no pronoun reference). Look for connectives (however, therefore).',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/verbal-ability-gq/',
+    gfg:'https://www.geeksforgeeks.org/parajumbles/',
     indiabix:'https://www.indiabix.com/verbal-ability/ordering-of-sentences/' },
   'Reading Comprehension':{
     theory:'Read questions first, then passage. Fact-based: answer in text. Inference: logical conclusion.',
-    gfg:'https://www.geeksforgeeks.org/aptitude-gq/verbal-ability-gq/',
+    gfg:'https://www.geeksforgeeks.org/reading-comprehension/',
     indiabix:'https://www.indiabix.com/verbal-ability/comprehension/' },
 
   /* ── Topic-level groups (for subtopic panel) ────────────────────────── */
   'Verbal Ability':['Synonyms & Antonyms','Grammar','One Word Substitution','Idioms & Phrases','Para Jumbles','Reading Comprehension'],
+};
+const TOPIC_SUBTOPICS = {
+  'Quantitative Aptitude': [
+    'Number System','Percentages','Profit & Loss','Simple & Compound Interest',
+    'Ratio & Proportion','Averages','Mixture & Alligation','Time & Work',
+    'Pipes & Cisterns','Speed, Time & Distance','Boats & Streams','Algebra',
+    'Progressions','Mensuration','Permutation & Combination','Probability',
+    'Clocks','Calendars','Data Interpretation',
+  ],
+  'Logical Reasoning': [
+    'Seating Arrangement','Blood Relations','Direction Sense','Number Series',
+    'Letter Series','Alphanumeric Series','Coding-Decoding','Syllogism',
+    'Statements & Conclusions','Mirror Images','Odd One Out',
+  ],
+  'Verbal Ability': [
+    'Synonyms & Antonyms','Grammar','One Word Substitution','Idioms & Phrases',
+    'Para Jumbles','Reading Comprehension',
+  ],
 };
 
 // ── Shared styles ────────────────────────────────────────────────────────────
@@ -562,7 +580,8 @@ function TopicSelector({ topicsData, stats, progress, onStartPractice, onStartQu
                 const isOpen = selCategory === cat;
                 const subs = TOPIC_SUBTOPICS[cat] || [];
                 const catPct = subtopicProgress(cat);
-                const qCount = topicsData.questionCounts?.[cat] || 0;
+                const subs2 = TOPIC_SUBTOPICS[cat] || [];
+                const qCount = subs2.reduce((acc, sub) => acc + (topicsData.questionCounts?.[sub] || 0), 0) || (topicsData.questionCounts?.[cat] || 0);
                 return (
                   <div key={cat} className="card" style={{ padding:0, overflow:'hidden' }}>
                     {/* Category header */}

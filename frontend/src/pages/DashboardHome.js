@@ -251,6 +251,7 @@ function StudentDash() {
   const [history, setHistory]   = useState([]);
   const [batchData, setBatch]   = useState(null);
   const [compReadiness, setCompReadiness] = useState([]);
+  const [drives, setDrives]               = useState([]);
   const [ipResult, setIpResult] = useState(null);
   const [ipLoading, setIpLoading] = useState(false);
   const [ipError, setIpError]   = useState('');
@@ -271,7 +272,7 @@ function StudentDash() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const load = useCallback(async () => {
-    const [dash, me, co, hist, batch, cr, lb, ann] = await Promise.all([
+    const [dash, me, co, hist, batch, cr, lb, ann, driveRes] = await Promise.all([
       apiFetch('/analytics/dashboard'),
       apiFetch('/auth/me'),
       apiFetch('/companies'),
@@ -280,6 +281,7 @@ function StudentDash() {
       apiFetch('/analytics/company-readiness'),
       apiFetch('/analytics/leaderboard?limit=10'),
       apiFetch('/announcements'),
+      apiFetch('/drives'),
     ]);
     setData(dash || {});
     if (me?.user && setUser) setUser(me.user);
@@ -289,6 +291,7 @@ function StudentDash() {
     if (cr?.results) setCompReadiness(cr.results);
     if (lb?.leaderboard) setLeaderboard(lb.leaderboard);
     if (ann?.announcements) setAnnouncements(ann.announcements);
+    if (driveRes?.drives) setDrives(driveRes.drives);
     setLoading(false);
   }, [setUser]);
 
@@ -431,8 +434,13 @@ function StudentDash() {
           </p>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={()=>setShowLeaderboard(true)} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem', display:'flex', alignItems:'center', gap:5 }}>
+          <button onClick={()=>setShowLeaderboard(true)} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem', display:'flex', alignItems:'center', gap:5, position:'relative' }}>
             🏆 Leaderboard
+            {announcements.filter(a=>a.priority==='urgent').length>0&&(
+              <span style={{ position:'absolute',top:-6,right:-6,minWidth:17,height:17,borderRadius:999,background:'#ef4444',color:'#fff',fontSize:'.58rem',fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid #fff' }}>
+                {announcements.filter(a=>a.priority==='urgent').length}
+              </span>
+            )}
           </button>
           <button onClick={()=>setShowEditProfile(true)} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid rgba(19,161,165,.2)', background:'rgba(19,161,165,.05)', color:'#13a1a5', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem', display:'flex', alignItems:'center', gap:5 }}>
             ✏️ Edit Profile
@@ -737,8 +745,8 @@ function StudentDash() {
         {/* Announcements */}
         <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:12, color:'#0f1a2e' }}>📢 Announcements</div>
-          {announcements.filter(a=>a.priority!=='urgent').length > 0 ? (
-            announcements.filter(a=>a.priority!=='urgent').slice(0,4).map(a=>{
+          {announcements.length > 0 ? (
+            announcements.slice(0,5).map(a=>{
               const pc={high:'#f59e0b',normal:'#531697'};
               return (
                 <div key={a._id} style={{ padding:'9px 12px', borderRadius:9, marginBottom:6, border:`1px solid ${(pc[a.priority||'normal'])}20`, background:`${pc[a.priority||'normal']}06` }}>
@@ -754,7 +762,7 @@ function StudentDash() {
           ) : (
             <div style={{ textAlign:'center', padding:'20px 0', color:'#b0bec9', fontSize:'.8rem' }}>
               <div style={{ fontSize:'1.5rem', marginBottom:6 }}>📭</div>
-              No announcements from faculty
+              No announcements yet — check back soon
             </div>
           )}
         </div>
@@ -765,19 +773,28 @@ function StudentDash() {
             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>🗓️ Upcoming Drives</div>
             <button onClick={()=>nav('/dashboard/companies')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>All Companies →</button>
           </div>
-          {companies.filter(c=>c.campusVisitDate&&new Date(c.campusVisitDate)>new Date()).length > 0 ? (
-            companies.filter(c=>c.campusVisitDate&&new Date(c.campusVisitDate)>new Date())
-              .sort((a,b)=>new Date(a.campusVisitDate)-new Date(b.campusVisitDate)).slice(0,4).map(c=>{
-              const days = Math.ceil((new Date(c.campusVisitDate)-new Date())/(1000*60*60*24));
-              const urg = days<=7?'#ef4444':days<=30?'#f59e0b':'#47d372';
+          {drives.length > 0 ? (
+            drives.slice(0,4).map(d => {
+              const date = new Date(d.driveDate);
+              const days = Math.ceil((date - Date.now()) / 86400000);
+              const urg  = days <= 7 ? '#ef4444' : days <= 30 ? '#f59e0b' : '#47d372';
+              const logo = d.companyId?.logoUrl;
               return (
-                <div key={c.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:9, marginBottom:6, background:`${urg}06`, border:`1px solid ${urg}20` }}>
-                  {c.logoUrl && <img src={c.logoUrl} alt={c.name} style={{ width:28, height:28, objectFit:'contain', borderRadius:6, background:'#fff', padding:2 }} onError={e=>e.target.style.display='none'}/>}
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{c.name}</div>
-                    <div style={{ fontSize:'.68rem', color:'#7a8ba8' }}>{new Date(c.campusVisitDate).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                <div key={d._id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:9, marginBottom:6, background:`${urg}06`, border:`1px solid ${urg}20`, cursor: d.applyLink ? 'pointer' : 'default' }}
+                  onClick={() => d.applyLink && window.open(d.applyLink, '_blank')}>
+                  {logo
+                    ? <img src={logo} alt={d.companyName} crossOrigin="anonymous" style={{ width:30, height:30, objectFit:'contain', borderRadius:6, background:'#fff', padding:2 }} onError={e=>{ e.target.style.display='none'; }}/>
+                    : <div style={{ width:30, height:30, borderRadius:6, background:`${urg}15`, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:'.78rem', color:urg }}>{(d.companyName||'?').charAt(0)}</div>
+                  }
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{d.companyName}</div>
+                    <div style={{ fontSize:'.67rem', color:'#7a8ba8' }}>
+                      {date.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
+                      {d.package && <span style={{ marginLeft:6, color:'#531697', fontWeight:600 }}>{d.package}</span>}
+                    </div>
+                    {d.eligibility && <div style={{ fontSize:'.63rem', color:'#b0bec9', marginTop:1 }}>{d.eligibility}</div>}
                   </div>
-                  <div style={{ textAlign:'right' }}>
+                  <div style={{ textAlign:'right', flexShrink:0 }}>
                     <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.2rem', color:urg, lineHeight:1 }}>{days}</div>
                     <div style={{ fontSize:'.62rem', color:urg, fontWeight:600 }}>days</div>
                   </div>
@@ -787,7 +804,7 @@ function StudentDash() {
           ) : (
             <div style={{ textAlign:'center', padding:'20px 0', color:'#b0bec9', fontSize:'.8rem' }}>
               <div style={{ fontSize:'1.5rem', marginBottom:6 }}>🏢</div>
-              No upcoming drives scheduled
+              No upcoming drives yet — admin will add them soon
             </div>
           )}
         </div>
@@ -795,6 +812,95 @@ function StudentDash() {
     </div>
   );
 }
+
+/* ── Add Placement Drive Panel (Faculty/Admin) ──────────────────────────── */
+function AddDrivePanel({ apiFetch, onAdded }) {
+  const [open, setOpen]   = React.useState(false);
+  const [form, setForm]   = React.useState({ companyName:'', driveDate:'', package:'', roles:'', eligibility:'', rounds:'', applyLink:'', instructions:'' });
+  const [msg,  setMsg]    = React.useState('');
+  const [loading, setLoad] = React.useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.companyName || !form.driveDate) { setMsg('Company name and drive date are required.'); return; }
+    setLoad(true); setMsg('');
+    try {
+      const token = localStorage.getItem('pragati_token');
+      const API   = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const r = await fetch(`${API}/api/drives`, {
+        method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify({
+          ...form,
+          roles:  form.roles.split(',').map(x=>x.trim()).filter(Boolean),
+          rounds: form.rounds.split(',').map(x=>x.trim()).filter(Boolean),
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Failed');
+      setMsg('✅ Drive added successfully! Students will see it on their dashboard.');
+      setForm({ companyName:'', driveDate:'', package:'', roles:'', eligibility:'', rounds:'', applyLink:'', instructions:'' });
+      onAdded && onAdded();
+    } catch(err) { setMsg(`❌ ${err.message}`); }
+    finally { setLoad(false); }
+  }
+
+  const IS = { width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff', boxSizing:'border-box' };
+  const LB = { display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" };
+
+  return (
+    <div className="card" style={{ padding:'20px 22px', marginTop:12 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: open ? 16 : 0 }}>
+        <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem' }}>🗓️ Add Placement Drive</div>
+        <button onClick={()=>setOpen(o=>!o)} style={{ padding:'6px 14px', borderRadius:8, border:'1.5px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.78rem' }}>
+          {open ? '▲ Hide' : '+ Add Drive'}
+        </button>
+      </div>
+      {open && (
+        <form onSubmit={submit}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+            <div>
+              <label style={LB}>Company Name *</label>
+              <input value={form.companyName} onChange={e=>setForm(f=>({...f,companyName:e.target.value}))} placeholder="e.g. TCS" style={IS} required />
+            </div>
+            <div>
+              <label style={LB}>Drive Date *</label>
+              <input type="date" value={form.driveDate} onChange={e=>setForm(f=>({...f,driveDate:e.target.value}))} style={IS} required />
+            </div>
+            <div>
+              <label style={LB}>Package (CTC)</label>
+              <input value={form.package} onChange={e=>setForm(f=>({...f,package:e.target.value}))} placeholder="e.g. 3.6 LPA - 6 LPA" style={IS} />
+            </div>
+            <div>
+              <label style={LB}>Roles (comma separated)</label>
+              <input value={form.roles} onChange={e=>setForm(f=>({...f,roles:e.target.value}))} placeholder="Software Engineer, Analyst" style={IS} />
+            </div>
+            <div style={{ gridColumn:'1/-1' }}>
+              <label style={LB}>Eligibility</label>
+              <input value={form.eligibility} onChange={e=>setForm(f=>({...f,eligibility:e.target.value}))} placeholder="e.g. CSAIML Y3 & Y4 with CGPA ≥ 7.0" style={IS} />
+            </div>
+            <div>
+              <label style={LB}>Rounds (comma separated)</label>
+              <input value={form.rounds} onChange={e=>setForm(f=>({...f,rounds:e.target.value}))} placeholder="Aptitude, Technical, HR" style={IS} />
+            </div>
+            <div>
+              <label style={LB}>Apply/Registration Link</label>
+              <input value={form.applyLink} onChange={e=>setForm(f=>({...f,applyLink:e.target.value}))} placeholder="https://…" style={IS} />
+            </div>
+            <div style={{ gridColumn:'1/-1' }}>
+              <label style={LB}>Additional Instructions</label>
+              <textarea value={form.instructions} onChange={e=>setForm(f=>({...f,instructions:e.target.value}))} rows={2} placeholder="Bring original documents, dress code, etc." style={{...IS, resize:'vertical'}} />
+            </div>
+          </div>
+          {msg && <div style={{ marginBottom:12, padding:'9px 14px', borderRadius:8, fontSize:'.83rem', fontWeight:600, background:msg.startsWith('✅')?'#dcfce7':'#fee2e2', color:msg.startsWith('✅')?'#166534':'#991b1b' }}>{msg}</div>}
+          <button type="submit" disabled={loading} style={{ padding:'11px 24px', borderRadius:10, border:'none', background:loading?'#d0d7e8':'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:loading?'not-allowed':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.88rem' }}>
+            {loading ? 'Adding…' : '🗓️ Add Drive'}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FACULTY DASHBOARD
@@ -1313,6 +1419,16 @@ function FacultyDash() {
         </div>
       )}
 
+      {/* Placement Drives tab */}
+      {activeTab==='announce' && (
+          <AddDrivePanel 
+            apiFetch={apiFetch} 
+            onAdded={() => {
+              alert("Drive added successfully");
+            }} 
+          />    
+  )}
+
       {/* Student Profile Modal */}
       {selectedStudent && (
         <div style={{ position:'fixed', inset:0, background:'rgba(4,44,93,0.5)', zIndex:999, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }} onClick={()=>{setSelectedStudent(null);setStudentProfile(null);}}>
@@ -1632,8 +1748,9 @@ function AdminDash() {
 
 export default function DashboardHome() {
   const { user } = useAuth();
+
   if (!user) return null;
-  if (user.role==='admin')   return <AdminDash/>;
-  if (user.role==='faculty') return <FacultyDash/>;
-  return <StudentDash/>;
+  if (user.role === 'admin') return <AdminDash />;
+  if (user.role === 'faculty') return <FacultyDash />;
+  return <StudentDash />;
 }
