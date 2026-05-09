@@ -552,5 +552,4 @@ router.get('/student-profile/:id', authenticate, async (req, res) => {
     });
   } catch(err) { console.error(err); res.status(500).json({ error:err.message }); }
 });
-
 module.exports = router;
