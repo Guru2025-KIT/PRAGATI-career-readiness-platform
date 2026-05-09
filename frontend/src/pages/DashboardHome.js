@@ -226,9 +226,9 @@ function RatingChart({ ratings=[] }) {
 
 /* ── LeetCode-style profile card (shown when clicking a student) ── */
 function LCProfileCard({ s, profileData, onBack }) {
-  const easy   = profileData?.problemStats?.easy   || s.totalProblemsSolved ? Math.floor((s.totalProblemsSolved||0)*0.45) : 0;
-  const medium = profileData?.problemStats?.medium || s.totalProblemsSolved ? Math.floor((s.totalProblemsSolved||0)*0.38) : 0;
-  const hard   = profileData?.problemStats?.hard   || (s.totalProblemsSolved||0) - easy - medium;
+  const easy   = profileData?.problemStats?.easy   || Math.floor((s.codingProblems||s.totalProblemsSolved||0)*0.45);
+  const medium = profileData?.problemStats?.medium || Math.floor((s.codingProblems||s.totalProblemsSolved||0)*0.38);
+  const hard   = profileData?.problemStats?.hard   || Math.max(0,(s.codingProblems||s.totalProblemsSolved||0) - easy - medium);
   const totalQ = 3920;
   const aptStats = profileData?.aptStats || [];
   const submissions = profileData?.submissionDates || [];
@@ -297,7 +297,7 @@ function LCProfileCard({ s, profileData, onBack }) {
           <div style={{ fontSize:'.7rem', fontWeight:800, color:'#b0bec9', letterSpacing:'.06em', marginBottom:10 }}>PROBLEMS SOLVED</div>
           <DonutChart easy={easy} medium={medium} hard={hard} total={totalQ}/>
           <div style={{ display:'flex', gap:10, marginTop:10 }}>
-            <div style={{ textAlign:'center' }}><div style={{ fontSize:'.68rem', color:'#b0bec9' }}>Attempting</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#0f1a2e' }}>{s.totalProblemsSolved||0}</div></div>
+            <div style={{ textAlign:'center' }}><div style={{ fontSize:'.68rem', color:'#b0bec9' }}>Attempting</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#0f1a2e' }}>{s.codingProblems||s.totalProblemsSolved||0}</div></div>
             <div style={{ textAlign:'center' }}><div style={{ fontSize:'.68rem', color:'#b0bec9' }}>Streak</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#f59e0b' }}>🔥{s.streak||0}d</div></div>
           </div>
         </div>
@@ -308,7 +308,7 @@ function LCProfileCard({ s, profileData, onBack }) {
         <div style={{ fontSize:'.7rem', fontWeight:800, color:'#b0bec9', letterSpacing:'.06em', marginBottom:10 }}>ACTIVITY — PAST YEAR</div>
         <ActivityHeatmap submissions={submissions}/>
         <div style={{ fontSize:'.7rem', color:'#b0bec9', marginTop:6 }}>
-          {s.totalProblemsSolved||0} submissions in the past one year
+          {s.codingProblems||s.totalProblemsSolved||0} submissions in the past one year
         </div>
       </div>
 
@@ -349,21 +349,34 @@ function LeaderboardModal({ onClose, myId }) {
   const [search, setSearch]   = useState('');
   const [filterBranch, setFB] = useState('All');
   const [filterYear, setFY]   = useState('All');
-  const [sortBy, setSortBy]   = useState('score'); // 'score' | 'streak' | 'solved'
+  const [sortBy, setSortBy]   = useState('score');
   const [profile, setProfile] = useState(null);
   const [profileData, setPD]  = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab]         = useState('global'); // 'global' | 'department' | 'year'
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLU]  = useState(null);
+
+  async function fetchLeaderboard() {
+    try {
+      const d = await apiFetch('/analytics/leaderboard?limit=500');
+      setAll(d?.leaderboard || []);
+      setLU(d?.lastUpdated || new Date());
+    } catch {}
+  }
 
   useEffect(() => {
-    apiFetch('/analytics/leaderboard?limit=200')
-      .then(d => { setAll(d?.leaderboard||[]); setLoading(false); });
+    fetchLeaderboard().then(() => setLoading(false));
   }, []);
+
+  async function refresh() {
+    setRefreshing(true);
+    await fetchLeaderboard();
+    setRefreshing(false);
+  }
 
   async function viewProfile(s) {
     setProfile(s); setPD(null);
     try {
-      // Use /my-profile for own profile, /student-profile/:id for peers (now open to all)
       const endpoint = s._id === myId
         ? '/analytics/my-profile'
         : `/analytics/student-profile/${s._id}`;
@@ -387,7 +400,7 @@ function LeaderboardModal({ onClose, myId }) {
     })
     .sort((a,b) => {
       if (sortBy === 'streak') return (b.streak||0) - (a.streak||0);
-      if (sortBy === 'solved') return (b.totalProblemsSolved||0) - (a.totalProblemsSolved||0);
+      if (sortBy === 'solved') return (b.codingProblems||b.totalProblemsSolved||0) - (a.codingProblems||a.totalProblemsSolved||0);
       return (b.totalScore||0) - (a.totalScore||0);
     });
 
@@ -406,13 +419,22 @@ function LeaderboardModal({ onClose, myId }) {
             <span style={{ fontSize:'1.4rem' }}>🏆</span>
             <div>
               <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:900, fontSize:'1.1rem', color:'#fff' }}>PRAGATI Leaderboard</div>
-              <div style={{ fontSize:'.7rem', color:'rgba(255,255,255,0.7)', marginTop:1 }}>{all.length} students ranked</div>
+              <div style={{ fontSize:'.68rem', color:'rgba(255,255,255,0.7)', marginTop:1 }}>
+                {all.length} students ranked · Live dynamic scores
+                {lastUpdated && ` · Updated ${new Date(lastUpdated).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`}
+              </div>
             </div>
           </div>
-          <button onClick={onClose}
-            style={{ width:34, height:34, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.15)', cursor:'pointer', color:'#fff', fontWeight:900, fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center' }}>
-            ×
-          </button>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <button onClick={refresh} disabled={refreshing}
+              style={{ padding:'6px 12px', borderRadius:8, border:'1.5px solid rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.15)', cursor:refreshing?'default':'pointer', color:'#fff', fontWeight:700, fontSize:'.72rem', fontFamily:"'Nunito',sans-serif" }}>
+              {refreshing ? '⏳' : '🔄'} Refresh
+            </button>
+            <button onClick={onClose}
+              style={{ width:34, height:34, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', background:'rgba(255,255,255,0.15)', cursor:'pointer', color:'#fff', fontWeight:900, fontSize:'1.1rem', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              ×
+            </button>
+          </div>
         </div>
 
         <div style={{ padding:'20px 24px', maxHeight:'82vh', overflowY:'auto' }}>
@@ -432,7 +454,7 @@ function LeaderboardModal({ onClose, myId }) {
                       {myData.name} <span style={{ color:'#531697', fontSize:'.72rem' }}>(you)</span>
                     </div>
                     <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginTop:2 }}>
-                      🔥 {myData.streak||0}d streak · {myData.totalProblemsSolved||0} solved · {myData.department}
+                      🔥 {myData.streak||0}d streak · {myData.codingProblems||myData.totalProblemsSolved||0} solved · {myData.department}
                     </div>
                   </div>
                   <div style={{ display:'flex', gap:16 }}>
@@ -563,7 +585,7 @@ function LeaderboardModal({ onClose, myId }) {
                           </div>
                           <div style={{ textAlign:'center' }}>
                             <div style={{ fontSize:'.62rem', color:'#b0bec9', fontWeight:700 }}>SOLVED</div>
-                            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', color:'#13a1a5' }}>{s.totalProblemsSolved||0}</div>
+                            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', color:'#13a1a5' }}>{s.codingProblems||s.totalProblemsSolved||0}</div>
                           </div>
                           <div style={{ textAlign:'center' }}>
                             <div style={{ fontSize:'.62rem', color:'#b0bec9', fontWeight:700 }}>SCORE</div>
@@ -633,7 +655,7 @@ function StudentDash() {
       apiFetch('/skillpath/history'),
       apiFetch('/analytics/batch-percentile'),
       apiFetch('/analytics/company-readiness'),
-      apiFetch('/analytics/leaderboard?limit=10'),
+      apiFetch('/analytics/leaderboard?limit=200'),
       apiFetch('/announcements'),
       apiFetch('/drives').catch(() => null),
     ]);
@@ -1081,20 +1103,39 @@ function StudentDash() {
               <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', color:'#0f1a2e' }}>🥇 Top Performers</div>
               <button onClick={()=>setShowLeaderboard(true)} style={{ padding:'3px 8px', borderRadius:6, border:'1px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, fontSize:'.65rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>All →</button>
             </div>
-            {leaderboard.slice(0,3).map((s,i)=>{
-              const medals=['🥇','🥈','🥉'];
-              const isMe = s._id===(data?.user?._id||ctxUser?._id);
-              return (
-                <div key={s._id} style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 8px', borderRadius:8, marginBottom:4, background:isMe?'rgba(83,22,151,0.06)':'#fafbff', border:isMe?'1.5px solid rgba(83,22,151,0.2)':'1px solid #f0f3fa' }}>
-                  <span style={{ fontSize:'1rem' }}>{medals[i]}</span>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontWeight:700, fontSize:'.78rem', color:'#0f1a2e', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.name}{isMe&&<span style={{ color:'#531697', fontSize:'.62rem' }}> (you)</span>}</div>
-                    <div style={{ fontSize:'.63rem', color:'#b0bec9' }}>🔥{s.streak}d</div>
+            {leaderboard.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'14px 0', color:'#b0bec9', fontSize:'.75rem' }}>
+                <div style={{ fontSize:'1.5rem', marginBottom:4 }}>⏳</div>
+                Loading rankings…
+              </div>
+            ) : (
+              leaderboard.slice(0,3).map((s,i)=>{
+                const medals=['🥇','🥈','🥉'];
+                const isMe = s._id===(data?.user?._id||ctxUser?._id);
+                const skillColors = { Beginner:'#f59e0b', Intermediate:'#531697', Expert:'#47d372' };
+                const sc = skillColors[s.skillLevel] || '#531697';
+                return (
+                  <div key={s._id||i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:10, marginBottom:5, background:isMe?'rgba(83,22,151,0.06)':'#fafbff', border:isMe?'1.5px solid rgba(83,22,151,0.2)':'1px solid #f0f3fa', cursor:'pointer' }}
+                    onClick={()=>setShowLeaderboard(true)}>
+                    <span style={{ fontSize:'1.1rem', flexShrink:0 }}>{medals[i]}</span>
+                    <div style={{ width:28, height:28, borderRadius:8, background:`linear-gradient(135deg,${sc},#13a1a5)`, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.75rem', flexShrink:0 }}>
+                      {s.name?.charAt(0)?.toUpperCase()}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontWeight:700, fontSize:'.78rem', color:'#0f1a2e', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                        {s.name}{isMe&&<span style={{ color:'#531697', fontSize:'.62rem' }}> (you)</span>}
+                      </div>
+                      <div style={{ fontSize:'.62rem', color:'#b0bec9' }}>
+                        🔥{s.streak||0}d · {s.department||'—'}
+                      </div>
+                    </div>
+                    <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', background:'linear-gradient(135deg,#531697,#13a1a5)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', flexShrink:0 }}>
+                      {s.totalScore||0}
+                    </div>
                   </div>
-                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', background:'linear-gradient(135deg,#531697,#13a1a5)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{s.totalScore}</div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>
