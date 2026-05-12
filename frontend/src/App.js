@@ -21,6 +21,9 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import FacultyStudentsPage from './pages/faculty/FacultyStudentsPage';
 import FacultyLeaderboardPage from './pages/faculty/FacultyLeaderboardPage';
 import FacultyAnnouncementsPage from './pages/faculty/FacultyAnnouncementsPage';
+import GDLobbyPage    from './pages/gd/GDLobbyPage';
+import GDRoomPage     from './pages/gd/GDRoomPage';
+import GDReportPage   from './pages/gd/GDReportPage';
 
 function RequireAuth({ children, role }) {
   const { user, loading } = useAuth();
@@ -60,6 +63,9 @@ function AppRoutes() {
         <Route path="students"            element={<FacultyStudentsPage />} />
         <Route path="leaderboard-view"    element={<FacultyLeaderboardPage />} />
         <Route path="announcements"       element={<FacultyAnnouncementsPage />} />
+        <Route path="gd"                  element={<GDLobbyPage />} />
+        <Route path="gd/:code"            element={<GDRoomPage />} />
+        <Route path="gd/report/:code/:userId" element={<GDReportPage />} />
               <Route path="admin"       element={<RequireAuth role="admin"><AdminPage /></RequireAuth>} />
       </Route>
 

@@ -22,6 +22,10 @@ const debugRoutes        = require('./routes/debug.routes');
 const directMsgRoutes    = require('./routes/directmessage.routes');
 const practiceRoutes     = require('./routes/practice.routes');
 const drivesRoutes       = require('./routes/drives.routes');
+const gdRoutes           = require('./routes/gd.routes');
+const GDRoom             = require('./models/GDRoom.model');
+const { Server }         = require('socket.io');
+const http               = require('http');
 
 const app = express();
 
@@ -84,6 +88,7 @@ app.use('/api/debug',         debugRoutes);
 app.use('/api/direct-messages', directMsgRoutes);
 app.use('/api/practice',       practiceRoutes);
 app.use('/api/drives',         drivesRoutes);
+app.use('/api/gd',            gdRoutes);
 
 // ── Error handler ──────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
@@ -100,12 +105,21 @@ app.use('*', (req, res) => res.status(404).json({ error: 'Route not found' }));
 // ── Start ──────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: { origin: process.env.CORS_ORIGIN || '*', methods: ['GET','POST'] },
+});
+
+// GD WebSocket — full logic in utils/gdSocket.js
+const { registerGDSocket } = require('./utils/gdSocket');
+registerGDSocket(io, GDRoom);
+
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('✅ MongoDB connected');
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`🚀 PRAGATI Backend running on port ${PORT}`);
-      console.log(`   Rate limit: 500 req/15min (general), 30 req/15min (auth)`);
+      console.log(`   GD WebSocket /gd namespace active`);
     });
   })
   .catch(err => {

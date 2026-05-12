@@ -83,10 +83,10 @@ export default function InterviewPrepHub() {
 
               {/* Card actions */}
               <div style={{ padding: '12px 16px', display: 'flex', gap: 8 }}>
-                <button onClick={() => nav(`/dashboard/practice/${key}`)}
-                  style={{ flex: 1, padding: '9px 14px', borderRadius: 9, border: 'none', background: GRAD, color: '#fff', fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif", fontSize: '.8rem', transition: 'opacity .15s' }}
+                <button onClick={() => key === 'GD' ? nav('/dashboard/gd') : nav(`/dashboard/practice/${key}`)}
+                  style={{ flex: 1, padding: '9px 14px', borderRadius: 9, border: 'none', background: key === 'GD' ? 'linear-gradient(135deg,#2563eb,#13a1a5)' : GRAD, color: '#fff', fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif", fontSize: '.8rem', transition: 'opacity .15s' }}
                   onMouseOver={e => e.currentTarget.style.opacity = '0.9'} onMouseOut={e => e.currentTarget.style.opacity = '1'}>
-                  🎯 Practice Now
+                  {key === 'GD' ? '🎤 Join Live GD Room' : '🎯 Practice Now'}
                 </button>
                 <button onClick={() => setActiveResource(showRes ? null : key)}
                   style={{ padding: '9px 14px', borderRadius: 9, border: `1.5px solid ${showRes ? meta.color : '#d0d7e8'}`, background: showRes ? meta.bg : '#fff', color: showRes ? meta.color : '#7a8ba8', fontWeight: 800, cursor: 'pointer', fontFamily: "'Nunito',sans-serif", fontSize: '.8rem', transition: 'all .15s', whiteSpace: 'nowrap' }}>

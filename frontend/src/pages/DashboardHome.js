@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const API = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -15,7 +15,7 @@ function Stat({ icon, label, value, sub, grad, onClick }) {
       <div style={{ fontSize:'1.3rem', marginBottom:6 }}>{icon}</div>
       <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', background:grad, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', lineHeight:1 }}>{value??'—'}</div>
       <div style={{ fontSize:'.78rem', fontWeight:700, color:'#3d4e6b', marginTop:4 }}>{label}</div>
-      {sub&&<div style={{ fontSize:'.68rem', color:muted, marginTop:2 }}>{sub}</div>}
+      {sub&&<div style={{ fontSize:'.68rem', color:'#b0bec9', marginTop:2 }}>{sub}</div>}
     </div>
   );
 }
@@ -30,7 +30,7 @@ function EditProfileModal({ user, onClose, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
-  const INP = { style:{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:rowHover, boxSizing:'border-box' } };
+  const INP = { style:{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff', boxSizing:'border-box' } };
   const LBL = ({ children }) => <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>{children}</label>;
 
   async function save(e) {
@@ -51,7 +51,7 @@ function EditProfileModal({ user, onClose, onSaved }) {
       <div style={{ background:'#fff', borderRadius:20, padding:'24px 28px', maxWidth:560, width:'100%', maxHeight:'88vh', overflowY:'auto', boxShadow:'0 20px 80px rgba(4,44,93,0.25)' }} onClick={e=>e.stopPropagation()}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.1rem', color:'#0f1a2e' }}>✏️ Edit Profile</div>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #e8edf5', background:secBg, cursor:'pointer', fontWeight:800, color:sub, fontSize:'1rem' }}>×</button>
+          <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #e8edf5', background:'#f8f9fc', cursor:'pointer', fontWeight:800, color:'#7a8ba8', fontSize:'1rem' }}>×</button>
         </div>
 
         {/* Avatar */}
@@ -59,7 +59,7 @@ function EditProfileModal({ user, onClose, onSaved }) {
           <div style={{ width:72, height:72, borderRadius:'50%', background:'linear-gradient(135deg,#531697,#13a1a5)', display:'inline-flex', alignItems:'center', justifyContent:'center', fontSize:'1.8rem', color:'#fff', fontFamily:"'Syne',sans-serif", fontWeight:800 }}>
             {user?.name?.[0]?.toUpperCase()||'U'}
           </div>
-          <div style={{ marginTop:6, fontSize:'.78rem', color:sub }}>{user?.email}</div>
+          <div style={{ marginTop:6, fontSize:'.78rem', color:'#7a8ba8' }}>{user?.email}</div>
           <div style={{ marginTop:2 }}>
             <span style={{ padding:'2px 10px', borderRadius:999, background:'rgba(83,22,151,.08)', color:'#531697', fontSize:'.7rem', fontWeight:700 }}>{user?.role?.toUpperCase()}</span>
           </div>
@@ -133,14 +133,14 @@ function DonutChart({ easy=0, medium=0, hard=0, total=0 }) {
         </svg>
         <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:900, fontSize:'1.5rem', color:'#0f1a2e', lineHeight:1 }}>{solved}</div>
-          <div style={{ fontSize:'.6rem', color:muted, fontWeight:700, marginTop:2 }}>/{total} Solved</div>
+          <div style={{ fontSize:'.6rem', color:'#b0bec9', fontWeight:700, marginTop:2 }}>/{total} Solved</div>
         </div>
       </div>
       <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
         {paths.map(s => (
           <div key={s.label} style={{ display:'flex', alignItems:'center', gap:8 }}>
             <div style={{ width:10, height:10, borderRadius:3, background:s.color, flexShrink:0 }}/>
-            <div style={{ fontSize:'.75rem', color:sub, minWidth:46, fontWeight:600 }}>{s.label}</div>
+            <div style={{ fontSize:'.75rem', color:'#7a8ba8', minWidth:46, fontWeight:600 }}>{s.label}</div>
             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.85rem', color:'#0f1a2e' }}>{s.val}</div>
           </div>
         ))}
@@ -149,45 +149,73 @@ function DonutChart({ easy=0, medium=0, hard=0, total=0 }) {
   );
 }
 
-/* Mini activity heatmap (52 weeks × 7 days) */
-function ActivityHeatmap({ submissions=[] }) {
-  const today   = new Date();
-  const cells   = 364;
-  const counts  = {};
+/* Monthly activity heatmap – purple, month-wise layout */
+function ActivityHeatmap({ submissions=[], currentStreak=0, maxStreak=0, compact=false }) {
+  const counts = {};
   submissions.forEach(d => { counts[d] = (counts[d]||0)+1; });
-  const days = Array.from({ length:cells }, (_,i) => {
-    const dt = new Date(today);
-    dt.setDate(today.getDate() - (cells-1-i));
-    const key = dt.toISOString().slice(0,10);
-    return { key, count: counts[key]||0 };
-  });
-  const maxC = Math.max(1, ...days.map(d=>d.count));
-  const getColor = c => {
+  const today = new Date();
+  const numMonths = compact ? 6 : 12;
+  const months = [];
+  for (let m = numMonths - 1; m >= 0; m--) {
+    const date = new Date(today.getFullYear(), today.getMonth() - m, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const days = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      days.push({ key, count: counts[key]||0 });
+    }
+    months.push({ label: date.toLocaleString('en-US',{ month:'short' }), year, month, days });
+  }
+  const allCounts = Object.values(counts);
+  const maxCount = Math.max(1, ...allCounts);
+  const getPurple = c => {
     if (!c) return '#f0f3fa';
-    const t = c/maxC;
-    if (t < 0.25) return '#c8e6c9';
-    if (t < 0.5)  return '#66bb6a';
-    if (t < 0.75) return '#43a047';
-    return '#1b5e20';
+    const t = c / maxCount;
+    if (t < 0.25) return '#e2d0f0';
+    if (t < 0.5)  return '#b57bed';
+    if (t < 0.75) return '#7c3aed';
+    return '#531697';
   };
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const CELL = compact ? 9 : 11;
+  const GAP  = compact ? 1 : 2;
   return (
-    <div style={{ overflowX:'auto' }}>
-      <svg width={728} height={110}>
-        {days.map((d,i) => {
-          const col = Math.floor(i/7), row = i%7;
-          return (
-            <rect key={i} x={col*14} y={row*14+16} width={11} height={11} rx={2}
-              fill={getColor(d.count)}>
-              <title>{d.key}: {d.count} submissions</title>
-            </rect>
-          );
-        })}
-        {Array.from({ length:12 }, (_,mi) => {
-          const col = Math.floor((mi/12)*52);
-          return <text key={mi} x={col*14} y={11} fontSize={9} fill="#b0bec9">{months[mi]}</text>;
-        })}
-      </svg>
+    <div>
+      <div style={{ display:'flex', gap: compact ? 6 : 10, flexWrap:'wrap', overflowX:'auto' }}>
+        {months.map((m, mi) => (
+          <div key={mi} style={{ flexShrink:0 }}>
+            <div style={{ fontSize:'.6rem', color:'#b0bec9', fontWeight:700, marginBottom:3 }}>
+              {m.label}{(mi===0 || m.month===0) ? `, ${m.year}` : ''}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:`repeat(7, ${CELL}px)`, gap:GAP }}>
+              {m.days.map((d, di) => (
+                <div key={di}
+                  title={d ? `${d.key}: ${d.count} activity` : ''}
+                  style={{ width:CELL, height:CELL, borderRadius:2,
+                    background: d ? getPurple(d.count) : 'transparent' }}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:14, marginTop:8, alignItems:'center', flexWrap:'wrap' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+          <span style={{ fontSize:'.68rem', color:'#7a8ba8', fontWeight:600 }}>Activity:</span>
+          {['#f0f3fa','#e2d0f0','#b57bed','#7c3aed','#531697'].map((c,i)=>(
+            <div key={i} style={{ width:CELL, height:CELL, borderRadius:2, background:c, border:'1px solid #e8edf5' }}/>
+          ))}
+        </div>
+        <span style={{ fontSize:'.72rem', color:'#7a8ba8' }}>
+          Current Streak <strong style={{ color:'#531697' }}>{currentStreak} Days</strong>
+        </span>
+        <span style={{ fontSize:'.72rem', color:'#7a8ba8' }}>
+          Max Streak <strong style={{ color:'#0f1a2e' }}>{maxStreak} Days</strong>
+        </span>
+      </div>
     </div>
   );
 }
@@ -214,7 +242,7 @@ function RatingChart({ ratings=[] }) {
       <div style={{ display:'flex', alignItems:'baseline', gap:6, marginBottom:4 }}>
         <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:900, fontSize:'1.6rem', color:'#0f1a2e' }}>{last}</span>
         <span style={{ fontSize:'.72rem', color: up?'#47d372':'#ef4444', fontWeight:700 }}>{up?'↑':'↓'}{Math.abs(last-prev)}</span>
-        <span style={{ fontSize:'.68rem', color:muted, marginLeft:4 }}>Contest Rating</span>
+        <span style={{ fontSize:'.68rem', color:'#b0bec9', marginLeft:4 }}>Contest Rating</span>
       </div>
       <svg width={W} height={H} style={{ overflow:'visible' }}>
         <polyline points={pts.join(' ')} fill="none" stroke={up?'#f59e0b':'#ef4444'} strokeWidth={2} strokeLinejoin="round"/>
@@ -239,7 +267,7 @@ function LCProfileCard({ s, profileData, onBack }) {
     <div>
       {/* Back button */}
       <button onClick={onBack}
-        style={{ marginBottom:16, padding:'6px 14px', borderRadius:8, border:'1px solid #d0d7e8', background:'transparent', color:sub, fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem', display:'flex', alignItems:'center', gap:6 }}>
+        style={{ marginBottom:16, padding:'6px 14px', borderRadius:8, border:'1px solid #d0d7e8', background:'transparent', color:'#7a8ba8', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem', display:'flex', alignItems:'center', gap:6 }}>
         ← Back to Leaderboard
       </button>
 
@@ -258,13 +286,13 @@ function LCProfileCard({ s, profileData, onBack }) {
                 {s.skillLevel || 'Beginner'}
               </span>
             </div>
-            <div style={{ fontSize:'.75rem', color:sub, marginTop:3 }}>
+            <div style={{ fontSize:'.75rem', color:'#7a8ba8', marginTop:3 }}>
               {s.rollNumber && <span>#{s.rollNumber} · </span>}
               {s.department && <span>{s.department} · </span>}
               {s.year && <span>Year {s.year} · </span>}
               <span>India</span>
             </div>
-            <div style={{ fontSize:'.72rem', color:muted, marginTop:2 }}>🔥 {s.streak||0} day streak · 🏆 Rank #{s.rank||'—'}</div>
+            <div style={{ fontSize:'.72rem', color:'#b0bec9', marginTop:2 }}>🔥 {s.streak||0} day streak · 🏆 Rank #{s.rank||'—'}</div>
             {/* Social links */}
             <div style={{ display:'flex', gap:6, marginTop:8, flexWrap:'wrap' }}>
               {s.githubUrl && <a href={s.githubUrl} target="_blank" rel="noopener noreferrer" style={{ padding:'3px 10px', borderRadius:6, background:'#f0f3fa', color:'#3d4e6b', fontWeight:700, fontSize:'.68rem', textDecoration:'none' }}>🐙 GitHub</a>}
@@ -284,30 +312,30 @@ function LCProfileCard({ s, profileData, onBack }) {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
         {/* Contest rating */}
         <div style={{ background:'#fff', border:'1px solid #e8edf5', borderRadius:14, padding:'16px 18px' }}>
-          <div style={{ fontSize:'.7rem', fontWeight:800, color:muted, letterSpacing:'.06em', marginBottom:10 }}>CONTEST RATING</div>
+          <div style={{ fontSize:'.7rem', fontWeight:800, color:'#b0bec9', letterSpacing:'.06em', marginBottom:10 }}>CONTEST RATING</div>
           <RatingChart ratings={ratings}/>
           <div style={{ display:'flex', gap:12, marginTop:8 }}>
-            <div><div style={{ fontSize:'.68rem', color:muted }}>Global Ranking</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#0f1a2e' }}>#{s.rank||'N/A'}</div></div>
-            <div><div style={{ fontSize:'.68rem', color:muted }}>ATS Score</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#531697' }}>{s.atsScore||0}</div></div>
+            <div><div style={{ fontSize:'.68rem', color:'#b0bec9' }}>Global Ranking</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#0f1a2e' }}>#{s.rank||'N/A'}</div></div>
+            <div><div style={{ fontSize:'.68rem', color:'#b0bec9' }}>ATS Score</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#531697' }}>{s.atsScore||0}</div></div>
           </div>
         </div>
 
         {/* Problems solved donut */}
         <div style={{ background:'#fff', border:'1px solid #e8edf5', borderRadius:14, padding:'16px 18px' }}>
-          <div style={{ fontSize:'.7rem', fontWeight:800, color:muted, letterSpacing:'.06em', marginBottom:10 }}>PROBLEMS SOLVED</div>
+          <div style={{ fontSize:'.7rem', fontWeight:800, color:'#b0bec9', letterSpacing:'.06em', marginBottom:10 }}>PROBLEMS SOLVED</div>
           <DonutChart easy={easy} medium={medium} hard={hard} total={totalQ}/>
           <div style={{ display:'flex', gap:10, marginTop:10 }}>
-            <div style={{ textAlign:'center' }}><div style={{ fontSize:'.68rem', color:muted }}>Attempting</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#0f1a2e' }}>{s.codingProblems||s.totalProblemsSolved||0}</div></div>
-            <div style={{ textAlign:'center' }}><div style={{ fontSize:'.68rem', color:muted }}>Streak</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#f59e0b' }}>🔥{s.streak||0}d</div></div>
+            <div style={{ textAlign:'center' }}><div style={{ fontSize:'.68rem', color:'#b0bec9' }}>Attempting</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#0f1a2e' }}>{s.codingProblems||s.totalProblemsSolved||0}</div></div>
+            <div style={{ textAlign:'center' }}><div style={{ fontSize:'.68rem', color:'#b0bec9' }}>Streak</div><div style={{ fontWeight:800, fontSize:'.85rem', color:'#f59e0b' }}>🔥{s.streak||0}d</div></div>
           </div>
         </div>
       </div>
 
       {/* Activity Heatmap */}
       <div style={{ background:'#fff', border:'1px solid #e8edf5', borderRadius:14, padding:'16px 18px', marginBottom:12, overflowX:'auto' }}>
-        <div style={{ fontSize:'.7rem', fontWeight:800, color:muted, letterSpacing:'.06em', marginBottom:10 }}>ACTIVITY — PAST YEAR</div>
-        <ActivityHeatmap submissions={submissions}/>
-        <div style={{ fontSize:'.7rem', color:muted, marginTop:6 }}>
+        <div style={{ fontSize:'.7rem', fontWeight:800, color:'#b0bec9', letterSpacing:'.06em', marginBottom:10 }}>ACTIVITY — PAST YEAR</div>
+        <ActivityHeatmap submissions={submissions} currentStreak={s.streak||0} maxStreak={s.maxStreak||s.streak||0}/>
+        <div style={{ fontSize:'.7rem', color:'#b0bec9', marginTop:6 }}>
           {s.codingProblems||s.totalProblemsSolved||0} submissions in the past one year
         </div>
       </div>
@@ -315,7 +343,7 @@ function LCProfileCard({ s, profileData, onBack }) {
       {/* Aptitude topic breakdown */}
       {aptStats.length > 0 && (
         <div style={{ background:'#fff', border:'1px solid #e8edf5', borderRadius:14, padding:'16px 18px' }}>
-          <div style={{ fontSize:'.7rem', fontWeight:800, color:muted, letterSpacing:'.06em', marginBottom:12 }}>APTITUDE ACCURACY BY TOPIC</div>
+          <div style={{ fontSize:'.7rem', fontWeight:800, color:'#b0bec9', letterSpacing:'.06em', marginBottom:12 }}>APTITUDE ACCURACY BY TOPIC</div>
           {aptStats.map(stat => {
             const pct = Math.round(stat.accuracy||0);
             const col = pct>=70?'#47d372':pct>=45?'#f59e0b':'#ef4444';
@@ -335,7 +363,7 @@ function LCProfileCard({ s, profileData, onBack }) {
       )}
 
       {!profileData && (
-        <div style={{ textAlign:'center', padding:28, color:muted, fontSize:'.85rem' }}>
+        <div style={{ textAlign:'center', padding:28, color:'#b0bec9', fontSize:'.85rem' }}>
           <div style={{ fontSize:'1.5rem', marginBottom:8 }}>⏳</div>Loading detailed profile…
         </div>
       )}
@@ -410,7 +438,7 @@ function LeaderboardModal({ onClose, myId }) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(4,44,93,0.6)', zIndex:1000, display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'20px 12px', overflowY:'auto' }}
       onClick={onClose}>
-      <div style={{ background:secBg, borderRadius:20, width:'100%', maxWidth:860, boxShadow:'0 24px 80px rgba(4,44,93,0.3)', position:'relative' }}
+      <div style={{ background:'#f8f9fc', borderRadius:20, width:'100%', maxWidth:860, boxShadow:'0 24px 80px rgba(4,44,93,0.3)', position:'relative' }}
         onClick={e => e.stopPropagation()}>
 
         {/* ── Header bar ── */}
@@ -450,27 +478,27 @@ function LeaderboardModal({ onClose, myId }) {
                     {myData.name?.charAt(0)}
                   </div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:800, fontSize:'.9rem', color:txt }}>
+                    <div style={{ fontWeight:800, fontSize:'.9rem', color:'#0f1a2e' }}>
                       {myData.name} <span style={{ color:'#531697', fontSize:'.72rem' }}>(you)</span>
                     </div>
-                    <div style={{ fontSize:'.72rem', color:sub, marginTop:2 }}>
+                    <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginTop:2 }}>
                       🔥 {myData.streak||0}d streak · {myData.codingProblems||myData.totalProblemsSolved||0} solved · {myData.department}
                     </div>
                   </div>
                   <div style={{ display:'flex', gap:16 }}>
                     <div style={{ textAlign:'center' }}>
                       <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:900, fontSize:'1.3rem', background:'linear-gradient(135deg,#531697,#13a1a5)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>#{myGlobalRank+1}</div>
-                      <div style={{ fontSize:'.6rem', color:muted, fontWeight:700 }}>Global</div>
+                      <div style={{ fontSize:'.6rem', color:'#b0bec9', fontWeight:700 }}>Global</div>
                     </div>
                     {myRankFiltered !== myGlobalRank && myRankFiltered >= 0 && (
                       <div style={{ textAlign:'center' }}>
                         <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:900, fontSize:'1.3rem', color:'#13a1a5' }}>#{myRankFiltered+1}</div>
-                        <div style={{ fontSize:'.6rem', color:muted, fontWeight:700 }}>Filtered</div>
+                        <div style={{ fontSize:'.6rem', color:'#b0bec9', fontWeight:700 }}>Filtered</div>
                       </div>
                     )}
                     <div style={{ textAlign:'center' }}>
                       <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:900, fontSize:'1.3rem', color:'#531697' }}>{myData.totalScore||0}</div>
-                      <div style={{ fontSize:'.6rem', color:muted, fontWeight:700 }}>Score</div>
+                      <div style={{ fontSize:'.6rem', color:'#b0bec9', fontWeight:700 }}>Score</div>
                     </div>
                   </div>
                   <button onClick={() => viewProfile(myData)}
@@ -505,7 +533,7 @@ function LeaderboardModal({ onClose, myId }) {
               </div>
 
               {/* Filter info */}
-              <div style={{ fontSize:'.7rem', color:muted, marginBottom:12 }}>
+              <div style={{ fontSize:'.7rem', color:'#b0bec9', marginBottom:12 }}>
                 Showing {filtered.length} of {all.length} students · Sorted by {sortBy}
               </div>
 
@@ -526,10 +554,10 @@ function LeaderboardModal({ onClose, myId }) {
                           {s.name?.charAt(0)}
                         </div>
                         <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.8rem', color:'#0f1a2e', marginBottom:2 }}>{s.name?.split(' ')[0]}</div>
-                        <div style={{ fontSize:'.65rem', color:muted, marginBottom:6 }}>{s.department} · Y{s.year}</div>
+                        <div style={{ fontSize:'.65rem', color:'#b0bec9', marginBottom:6 }}>{s.department} · Y{s.year}</div>
                         <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:900, fontSize:'1rem', color:colors[actualRank] }}>{s.totalScore||0}</div>
-                        <div style={{ fontSize:'.6rem', color:muted }}>pts</div>
-                        <div style={{ fontSize:'.68rem', color:sub, marginTop:4 }}>🔥{s.streak||0}d</div>
+                        <div style={{ fontSize:'.6rem', color:'#b0bec9' }}>pts</div>
+                        <div style={{ fontSize:'.68rem', color:'#7a8ba8', marginTop:4 }}>🔥{s.streak||0}d</div>
                       </div>
                     );
                   })}
@@ -541,7 +569,7 @@ function LeaderboardModal({ onClose, myId }) {
                 <div style={{ textAlign:'center', padding:32 }}>
                   <div style={{ width:36, height:36, border:'3px solid #e8edf5', borderTopColor:'#531697', borderRadius:'50%', animation:'_spin .7s linear infinite', margin:'0 auto 10px' }}/>
                   <style>{`@keyframes _spin{to{transform:rotate(360deg)}}`}</style>
-                  <div style={{ color:muted, fontSize:'.82rem' }}>Loading leaderboard…</div>
+                  <div style={{ color:'#b0bec9', fontSize:'.82rem' }}>Loading leaderboard…</div>
                 </div>
               ) : (
                 <>
@@ -559,7 +587,7 @@ function LeaderboardModal({ onClose, myId }) {
                         <div style={{ width:36, textAlign:'center', flexShrink:0 }}>
                           {globalIdx < 3
                             ? <span style={{ fontSize:'1.2rem' }}>{medals[globalIdx]}</span>
-                            : <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', color:muted }}>#{globalIdx+1}</span>}
+                            : <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', color:'#b0bec9' }}>#{globalIdx+1}</span>}
                         </div>
                         {/* Avatar */}
                         <div style={{ width:36, height:36, borderRadius:10, background:`linear-gradient(135deg,${sc},#13a1a5)`, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', flexShrink:0 }}>
@@ -571,7 +599,7 @@ function LeaderboardModal({ onClose, myId }) {
                             <span style={{ fontWeight:700, fontSize:'.88rem', color:'#0f1a2e' }}>{s.name}</span>
                             {isMe && <span style={{ fontSize:'.62rem', fontWeight:800, color:'#531697', background:'rgba(83,22,151,0.1)', padding:'1px 6px', borderRadius:999 }}>YOU</span>}
                           </div>
-                          <div style={{ fontSize:'.68rem', color:muted, marginTop:1 }}>
+                          <div style={{ fontSize:'.68rem', color:'#b0bec9', marginTop:1 }}>
                             {s.department} · Y{s.year}
                             {s.rollNumber ? ` · ${s.rollNumber}` : ''}
                             {' · '}<span style={{ color:sc, fontWeight:700 }}>{s.skillLevel||'Beginner'}</span>
@@ -580,15 +608,15 @@ function LeaderboardModal({ onClose, myId }) {
                         {/* Stats chips */}
                         <div style={{ display:'flex', gap:10, alignItems:'center', flexShrink:0 }}>
                           <div style={{ textAlign:'center' }}>
-                            <div style={{ fontSize:'.62rem', color:muted, fontWeight:700 }}>STREAK</div>
+                            <div style={{ fontSize:'.62rem', color:'#b0bec9', fontWeight:700 }}>STREAK</div>
                             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', color:'#f59e0b' }}>🔥{s.streak||0}d</div>
                           </div>
                           <div style={{ textAlign:'center' }}>
-                            <div style={{ fontSize:'.62rem', color:muted, fontWeight:700 }}>SOLVED</div>
+                            <div style={{ fontSize:'.62rem', color:'#b0bec9', fontWeight:700 }}>SOLVED</div>
                             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', color:'#13a1a5' }}>{s.codingProblems||s.totalProblemsSolved||0}</div>
                           </div>
                           <div style={{ textAlign:'center' }}>
-                            <div style={{ fontSize:'.62rem', color:muted, fontWeight:700 }}>SCORE</div>
+                            <div style={{ fontSize:'.62rem', color:'#b0bec9', fontWeight:700 }}>SCORE</div>
                             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', background:'linear-gradient(135deg,#531697,#13a1a5)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{s.totalScore||0}</div>
                           </div>
                           <span style={{ color:'#d0d7e8', fontSize:'.75rem' }}>→</span>
@@ -597,7 +625,7 @@ function LeaderboardModal({ onClose, myId }) {
                     );
                   })}
                   {filtered.length === 0 && (
-                    <div style={{ textAlign:'center', padding:40, color:muted }}>
+                    <div style={{ textAlign:'center', padding:40, color:'#b0bec9' }}>
                       <div style={{ fontSize:'2rem', marginBottom:8 }}>🔍</div>
                       No students match this filter.
                     </div>
@@ -619,19 +647,6 @@ function LeaderboardModal({ onClose, myId }) {
 function StudentDash() {
   const { user:ctxUser, setUser } = useAuth();
   const nav = useNavigate();
-  const { darkMode: dm = false } = useOutletContext() || {};
-
-  // Dark mode theme tokens
-  const cardBg   = dm ? '#1a2235' : '#fff';
-  const pageBg   = dm ? '#0f1623' : '#f4f6fb';
-  const cardBrd  = dm ? '#2d3a52' : '#f0f3fa';
-  const txt      = dm ? '#e2e8f0' : '#0f1a2e';
-  const sub      = dm ? '#94a3b8' : '#7a8ba8';
-  const muted    = dm ? '#64748b' : '#b0bec9';
-  const inpBg    = dm ? '#2d3748' : '#fafbff';
-  const inpBrd   = dm ? '#334155' : '#d0d7e8';
-  const rowHover = dm ? '#1e2d42' : '#fafbff';
-  const secBg    = dm ? '#111827' : '#f8f9fc';
 
   // ALL hooks declared at top unconditionally
   const [data, setData]         = useState(null);
@@ -659,6 +674,7 @@ function StudentDash() {
   const [fullLeaderboard, setFullLeaderboard] = useState([]);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [myActivityData, setMyActivityData] = useState(null);
 
   const load = useCallback(async () => {
     const [dash, me, co, hist, batch, cr, lb, ann, driveData] = await Promise.all([
@@ -674,6 +690,13 @@ function StudentDash() {
     ]);
     setData(dash || {});
     if (me?.user && setUser) setUser(me.user);
+    // Load student's own activity after we have the user ID
+    const uid = me?.user?._id;
+    if (uid) {
+      apiFetch(`/analytics/student-profile/${uid}`).then(d => {
+        if (d) setMyActivityData(d);
+      });
+    }
     setCompanies(co?.companies || []);
     setHistory(hist?.results || []);
     if (batch) setBatch(batch);
@@ -691,17 +714,6 @@ function StudentDash() {
   }, [setUser]);
 
   useEffect(() => { load(); }, [load]);
-
-  // Auto-refresh leaderboard every 60 seconds for live rankings
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const lb = await apiFetch('/analytics/leaderboard?limit=200');
-        if (lb?.leaderboard) setLeaderboard(lb.leaderboard);
-      } catch {}
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Auto-refresh company readiness when the browser tab regains focus
   // (catches cases where user did a SkillPath analysis and switched back)
@@ -812,7 +824,7 @@ function StudentDash() {
   if (loading) return (
     <div style={{ display:'flex', justifyContent:'center', alignItems:'center', minHeight:'60vh', flexDirection:'column', gap:12 }}>
       <div style={{ width:40, height:40, border:'3px solid #e8edf5', borderTopColor:'#531697', borderRadius:'50%', animation:'_s .7s linear infinite' }}/>
-      <div style={{ color:muted, fontSize:'.82rem' }}>Loading your dashboard…</div>
+      <div style={{ color:'#b0bec9', fontSize:'.82rem' }}>Loading your dashboard…</div>
       <style>{`@keyframes _s{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
@@ -825,22 +837,7 @@ function StudentDash() {
   const currentQ = allIpQs[ipQIdx];
 
   return (
-    <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:1200, margin:'0 auto', background:pageBg }}>
-      <style>{`
-        @keyframes _s{to{transform:rotate(360deg)}}
-        ${dm ? `
-          .sd-card{background:#1a2235!important;border-color:#2d3a52!important;}
-          .sd-card-soft{background:#111827!important;border-color:#2d3a52!important;}
-          .sd-input{background:#2d3748!important;border-color:#334155!important;color:#e2e8f0!important;}
-          .sd-select{background:#2d3748!important;border-color:#334155!important;color:#e2e8f0!important;}
-          .sd-row:hover{background:#1e2d42!important;}
-          .sd-txt{color:#e2e8f0!important;}
-          .sd-sub{color:#94a3b8!important;}
-          .sd-muted{color:#64748b!important;}
-          .sd-section-bg{background:#111827!important;border-color:#2d3a52!important;}
-          .sd-tag{background:#1e2d42!important;border-color:#334155!important;}
-        ` : ''}
-      `}</style>
+    <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:1200, margin:'0 auto' }}>
       {showEditProfile && <EditProfileModal user={user} onClose={()=>setShowEditProfile(false)} onSaved={u=>{ if(setUser) setUser(u); load(); }} />}
       {showLeaderboard && <LeaderboardModal onClose={()=>setShowLeaderboard(false)} myId={data?.user?._id||ctxUser?._id} />}
 
@@ -850,7 +847,7 @@ function StudentDash() {
           <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.6rem', color:'#0f1a2e', margin:0 }}>
             Hello, {user?.name?.split(' ')[0]||'Student'} 👋
           </h1>
-          <p style={{ color:sub, marginTop:4, fontSize:'.88rem' }}>
+          <p style={{ color:'#7a8ba8', marginTop:4, fontSize:'.88rem' }}>
             {new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
           </p>
         </div>
@@ -875,7 +872,7 @@ function StudentDash() {
           <span style={{ fontSize:'1.1rem' }}>🚨</span>
           <div style={{ flex:1 }}>
             <span style={{ fontWeight:800, color:'#991b1b', fontSize:'.85rem' }}>{a.title}: </span>
-            <span style={{ color:sub, fontSize:'.82rem' }}>{a.message}</span>
+            <span style={{ color:'#7a8ba8', fontSize:'.82rem' }}>{a.message}</span>
           </div>
           {a.link&&<a href={a.link} target="_blank" rel="noreferrer" style={{ color:'#991b1b', fontWeight:700, fontSize:'.75rem', textDecoration:'none' }}>View →</a>}
         </div>
@@ -886,7 +883,7 @@ function StudentDash() {
         <div onClick={()=>nav('/dashboard/skillpath')} style={{ background:'linear-gradient(135deg,rgba(83,22,151,0.06),rgba(19,161,165,0.06))', border:'1.5px dashed rgba(83,22,151,.25)', borderRadius:12, padding:'12px 18px', marginBottom:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div>
             <div style={{ fontWeight:800, color:'#531697', fontSize:'.88rem' }}>📄 Upload your resume to unlock personalised insights</div>
-            <div style={{ fontSize:'.75rem', color:sub, marginTop:2 }}>Get ATS score, skill gaps, company readiness and learning pathway</div>
+            <div style={{ fontSize:'.75rem', color:'#7a8ba8', marginTop:2 }}>Get ATS score, skill gaps, company readiness and learning pathway</div>
           </div>
           <div style={{ padding:'6px 14px', borderRadius:8, background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, fontSize:'.78rem', flexShrink:0 }}>Start Now →</div>
         </div>
@@ -900,26 +897,67 @@ function StudentDash() {
           { icon:'📊', label:'ATS Score', value:ats?`${ats}/100`:'—', sub:ats?confidenceLabel:'Upload resume', grad:'linear-gradient(135deg,#042c5d,#531697)', onClick:()=>nav('/dashboard/skillpath') },
           { icon:'⭐', label:'Skill Level', value:lvl, sub:`Based on latest analysis`, grad:`linear-gradient(135deg,${lc[lvl]||'#531697'},#13a1a5)` },
         ].map(s=>(
-          <div key={s.label} onClick={s.onClick} style={{ background:cardBg, borderRadius:14, padding:'14px 16px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:`1px solid ${cardBrd}`, cursor:s.onClick?'pointer':'default', transition:'transform .15s, box-shadow .15s' }}
+          <div key={s.label} onClick={s.onClick} style={{ background:'#fff', borderRadius:14, padding:'14px 16px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa', cursor:s.onClick?'pointer':'default', transition:'transform .15s, box-shadow .15s' }}
             onMouseOver={e=>{ if(s.onClick){ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 6px 20px rgba(83,22,151,0.1)'; }}}
             onMouseOut={e=>{ e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'; }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
               <div style={{ width:34, height:34, borderRadius:9, background:s.grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>{s.icon}</div>
-              <div style={{ fontSize:'.7rem', color:muted, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>{s.label}</div>
+              <div style={{ fontSize:'.7rem', color:'#b0bec9', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.04em' }}>{s.label}</div>
             </div>
             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', color:'#0f1a2e', lineHeight:1 }}>{s.value}</div>
-            <div style={{ fontSize:'.7rem', color:sub, marginTop:4 }}>{s.sub}</div>
+            <div style={{ fontSize:'.7rem', color:'#7a8ba8', marginTop:4 }}>{s.sub}</div>
           </div>
         ))}
       </div>
+
+      {/* ── CODING ACTIVITY: Heatmap + Donut ────────────────────────── */}
+      {(() => {
+        const myProblems = solved || 0;
+        const easy   = myActivityData?.problemStats?.easy   || Math.floor(myProblems * 0.45);
+        const medium = myActivityData?.problemStats?.medium || Math.floor(myProblems * 0.38);
+        const hard   = myActivityData?.problemStats?.hard   || Math.max(0, myProblems - Math.floor(myProblems*0.45) - Math.floor(myProblems*0.38));
+        const submissions = myActivityData?.submissionDates || [];
+        return (
+          <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa', marginBottom:12 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, flexWrap:'wrap', gap:8 }}>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>
+                📊 My Coding Activity
+              </div>
+              <div style={{ fontSize:'.72rem', color:'#7a8ba8', fontWeight:600 }}>
+                {myProblems} problems solved total
+              </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:24, alignItems:'start' }}>
+              {/* Heatmap */}
+              <div>
+                <div style={{ fontSize:'.7rem', fontWeight:700, color:'#3d4e6b', marginBottom:10 }}>📅 Monthly Activity</div>
+                <ActivityHeatmap
+                  submissions={submissions}
+                  currentStreak={streak}
+                  maxStreak={user?.maxStreak || streak}
+                />
+              </div>
+              {/* Donut */}
+              <div style={{ borderLeft:'1px solid #e8edf5', paddingLeft:24, minWidth:190 }}>
+                <div style={{ fontSize:'.7rem', fontWeight:700, color:'#3d4e6b', marginBottom:10 }}>💻 Problems Breakdown</div>
+                <DonutChart easy={easy} medium={medium} hard={hard} total={myProblems}/>
+                <button onClick={()=>nav('/dashboard/problems')}
+                  style={{ marginTop:12, width:'100%', padding:'7px', borderRadius:9, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.75rem' }}>
+                  Solve More Problems →
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── ROW 2: SKILLPATH + QUICK ACTIONS ─────────────────────────── */}
       <div style={{ display:'grid', gridTemplateColumns:'1.6fr 1fr', gap:12, marginBottom:12 }}>
 
         {/* Latest SkillPath */}
-        <div style={{ background:cardBg, borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:`1px solid ${cardBrd}` }}>
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:txt }}>🧠 Latest SkillPath Analysis</div>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>🧠 Latest SkillPath Analysis</div>
             <button onClick={()=>nav('/dashboard/skillpath')} style={{ padding:'5px 12px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.73rem' }}>New →</button>
           </div>
           {result ? (
@@ -934,7 +972,7 @@ function StudentDash() {
                       strokeDasharray={`${(ats/100)*163.4} 163.4`}
                       strokeLinecap="round"/>
                   </svg>
-                  <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', color:txt }}>{ats}</div>
+                  <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', color:'#0f1a2e' }}>{ats}</div>
                 </div>
                 <div style={{ flex:1 }}>
                   <div style={{ fontWeight:700, color:'#0f1a2e', fontSize:'.88rem', marginBottom:3 }}>{result.jobTitle||'Role'}</div>
@@ -949,7 +987,7 @@ function StudentDash() {
               {/* Skill gap chips */}
               {result.skillGapAnalysis?.missingSkills?.length > 0 && (
                 <div style={{ marginBottom:12 }}>
-                  <div style={{ fontSize:'.7rem', fontWeight:700, color:muted, marginBottom:5, textTransform:'uppercase', letterSpacing:'0.04em' }}>Top Skill Gaps</div>
+                  <div style={{ fontSize:'.7rem', fontWeight:700, color:'#b0bec9', marginBottom:5, textTransform:'uppercase', letterSpacing:'0.04em' }}>Top Skill Gaps</div>
                   <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
                     {result.skillGapAnalysis.missingSkills.slice(0,6).map(s=>(
                       <span key={s} style={{ padding:'2px 8px', borderRadius:999, background:'rgba(239,68,68,0.07)', color:'#991b1b', fontSize:'.7rem', fontWeight:600 }}>− {s}</span>
@@ -966,7 +1004,7 @@ function StudentDash() {
                 const path = pts.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ');
                 return (
                   <div style={{ marginBottom:12 }}>
-                    <div style={{ fontSize:'.7rem', fontWeight:700, color:muted, marginBottom:4, textTransform:'uppercase', letterSpacing:'0.04em' }}>ATS History ({vals.length} analyses)</div>
+                    <div style={{ fontSize:'.7rem', fontWeight:700, color:'#b0bec9', marginBottom:4, textTransform:'uppercase', letterSpacing:'0.04em' }}>ATS History ({vals.length} analyses)</div>
                     <svg viewBox={`0 0 ${W} ${H}`} style={{ width:'100%', height:42 }}>
                       <defs><linearGradient id="atsg2" x1="0" x2="1"><stop offset="0%" stopColor="#531697"/><stop offset="100%" stopColor="#13a1a5"/></linearGradient></defs>
                       <path d={`${path} L${pts[pts.length-1].x},${H} L${pts[0].x},${H} Z`} fill="url(#atsg2)" opacity={0.1}/>
@@ -986,14 +1024,14 @@ function StudentDash() {
           ) : (
             <div style={{ textAlign:'center', padding:'24px 0' }}>
               <div style={{ fontSize:'2.5rem', marginBottom:10 }}>🧠</div>
-              <div style={{ fontSize:'.85rem', color:muted, marginBottom:14 }}>Upload your resume & paste a JD to get started</div>
+              <div style={{ fontSize:'.85rem', color:'#b0bec9', marginBottom:14 }}>Upload your resume & paste a JD to get started</div>
               <button onClick={()=>nav('/dashboard/skillpath')} style={{ padding:'10px 24px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#531697,#13a1a5)', color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.85rem' }}>Start SkillPath AI →</button>
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div style={{ background:cardBg, borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:`1px solid ${cardBrd}` }}>
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:12, color:'#0f1a2e' }}>⚡ Quick Actions</div>
           {[
             { icon:'💻', label:"Today's DSA Problem", sub:'Solve to extend streak', to:'/dashboard/problems', grad:'linear-gradient(135deg,#531697,#13a1a5)' },
@@ -1004,13 +1042,13 @@ function StudentDash() {
             { icon:'📝', label:'Discussions', sub:'Post doubts, get answers', to:'/dashboard/discussions', grad:'linear-gradient(135deg,#10b981,#13a1a5)' },
           ].map(a=>(
             <button key={a.to} onClick={()=>nav(a.to)}
-              style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:10, border:'1px solid #f0f3fa', background:rowHover, cursor:'pointer', marginBottom:5, textAlign:'left', transition:'all .15s' }}
+              style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:10, border:'1px solid #f0f3fa', background:'#fafbff', cursor:'pointer', marginBottom:5, textAlign:'left', transition:'all .15s' }}
               onMouseOver={e=>{ e.currentTarget.style.background='rgba(83,22,151,0.04)'; e.currentTarget.style.borderColor='rgba(83,22,151,0.2)'; }}
               onMouseOut={e=>{ e.currentTarget.style.background='#fafbff'; e.currentTarget.style.borderColor='#f0f3fa'; }}>
               <div style={{ width:32, height:32, borderRadius:8, background:a.grad, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.9rem', flexShrink:0 }}>{a.icon}</div>
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ fontSize:'.8rem', fontWeight:700, color:'#0f1a2e' }}>{a.label}</div>
-                <div style={{ fontSize:'.67rem', color:muted }}>{a.sub}</div>
+                <div style={{ fontSize:'.67rem', color:'#b0bec9' }}>{a.sub}</div>
               </div>
               <span style={{ color:'#d0d7e8', fontSize:'.8rem' }}>›</span>
             </button>
@@ -1020,15 +1058,15 @@ function StudentDash() {
 
       {/* ── INTERVIEW PREP PANEL ────────────────────────────────────────── */}
       {showIP && (
-        <div style={{ background:cardBg, borderRadius:14, padding:'20px 22px', marginBottom:12, boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1.5px solid rgba(83,22,151,.15)' }}>
+        <div style={{ background:'#fff', borderRadius:14, padding:'20px 22px', marginBottom:12, boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1.5px solid rgba(83,22,151,.15)' }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:12, color:'#0f1a2e', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               🎤 AI Interview Prep
               <span style={{ padding:'2px 8px', borderRadius:999, background:'rgba(83,22,151,.08)', color:'#531697', fontSize:'.68rem', fontWeight:700 }}>Gemini AI</span>
             </div>
-            <button onClick={()=>setShowIP(false)} style={{ width:24, height:24, borderRadius:'50%', border:'1px solid #d0d7e8', background:'transparent', cursor:'pointer', color:muted, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.8rem' }}>✕</button>
+            <button onClick={()=>setShowIP(false)} style={{ width:24, height:24, borderRadius:'50%', border:'1px solid #d0d7e8', background:'transparent', cursor:'pointer', color:'#b0bec9', fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.8rem' }}>✕</button>
           </div>
-          {ipLoading && <div style={{ textAlign:'center', padding:20, color:sub }}>⏳ Generating personalised prep guide…</div>}
+          {ipLoading && <div style={{ textAlign:'center', padding:20, color:'#7a8ba8' }}>⏳ Generating personalised prep guide…</div>}
           {ipError && <div style={{ padding:'10px 14px', background:'#fee2e2', borderRadius:8, fontSize:'.82rem', color:'#991b1b', fontWeight:600 }}>{ipError}</div>}
           {ipResult && !ipLoading && (
             <>
@@ -1039,13 +1077,13 @@ function StudentDash() {
                 <div style={{ marginBottom:14 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
                     <span style={{ padding:'2px 8px', borderRadius:999, background:'rgba(83,22,151,.08)', color:'#531697', fontSize:'.7rem', fontWeight:700 }}>{currentQ.type}</span>
-                    <span style={{ fontSize:'.73rem', color:muted }}>Q {ipQIdx+1} of {allIpQs.length}</span>
+                    <span style={{ fontSize:'.73rem', color:'#b0bec9' }}>Q {ipQIdx+1} of {allIpQs.length}</span>
                     <div style={{ flex:1, height:4, background:'#f0f3fa', borderRadius:999 }}>
                       <div style={{ height:'100%', width:`${((ipQIdx+1)/allIpQs.length)*100}%`, background:'linear-gradient(90deg,#531697,#13a1a5)', borderRadius:999 }}/>
                     </div>
                   </div>
                   <div style={{ fontWeight:700, fontSize:'.9rem', color:'#0f1a2e', marginBottom:8, lineHeight:1.5 }}>{currentQ.question}</div>
-                  {currentQ.tip && <div style={{ fontSize:'.75rem', color:sub, marginBottom:10, fontStyle:'italic', padding:'6px 10px', background:'rgba(245,158,11,0.06)', borderRadius:6 }}>💡 {currentQ.tip}</div>}
+                  {currentQ.tip && <div style={{ fontSize:'.75rem', color:'#7a8ba8', marginBottom:10, fontStyle:'italic', padding:'6px 10px', background:'rgba(245,158,11,0.06)', borderRadius:6 }}>💡 {currentQ.tip}</div>}
                   <div style={{ position:'relative' }}>
                     <textarea value={ipAnswer} onChange={e=>setIpAnswer(e.target.value)} rows={3}
                       placeholder="Type your answer here…"
@@ -1083,16 +1121,16 @@ function StudentDash() {
       <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:12, marginBottom:12 }}>
 
         {/* Company Readiness */}
-        <div style={{ background:cardBg, borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:`1px solid ${cardBrd}` }}>
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:txt }}>🏢 Company Readiness</div>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>🏢 Company Readiness</div>
             <div style={{ display:'flex', gap:6 }}>
               <button onClick={async()=>{ const cr=await apiFetch('/analytics/company-readiness'); if(cr?.results) setCompReadiness(cr.results); }}
                 style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#13a1a5', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>↻</button>
               <button onClick={()=>nav('/dashboard/companies')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid #d0d7e8', background:'transparent', color:'#531697', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>All →</button>
             </div>
           </div>
-          <div style={{ fontSize:'.72rem', color:sub, marginBottom:10 }}>
+          <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginBottom:10 }}>
             {user?.resumeParsedSkills?.length ? `Based on ${user.resumeParsedSkills.length} skills from your resume · ATS ${ats}/100` : <span style={{ color:'#f59e0b', fontWeight:600 }}>⚠️ Upload resume in SkillPath AI to personalise scores</span>}
           </div>
           {compReadiness.length > 0 ? compReadiness.slice(0,6).map(c=>{
@@ -1116,7 +1154,7 @@ function StudentDash() {
               </div>
             );
           }) : (
-            <div style={{ textAlign:'center', padding:'20px 0', color:muted, fontSize:'.82rem' }}>
+            <div style={{ textAlign:'center', padding:'20px 0', color:'#b0bec9', fontSize:'.82rem' }}>
               <div style={{ fontSize:'1.8rem', marginBottom:6 }}>📊</div>
               Run SkillPath AI analysis to see your company match scores
             </div>
@@ -1125,25 +1163,25 @@ function StudentDash() {
 
         {/* Batch Rank + Leaderboard Top 3 */}
         <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-          <div style={{ background:cardBg, borderRadius:14, padding:'16px 18px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:`1px solid ${cardBrd}`, flex:1 }}>
+          <div style={{ background:'#fff', borderRadius:14, padding:'16px 18px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa', flex:1 }}>
             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', marginBottom:10, color:'#0f1a2e' }}>🏆 Batch Rank</div>
             {batchData?.batchSize > 1 ? (
               <div style={{ textAlign:'center' }}>
                 <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'2.2rem', color:batchData.topPct<=25?'#47d372':batchData.topPct<=50?'#f59e0b':'#ef4444', lineHeight:1 }}>Top {batchData.topPct}%</div>
-                <div style={{ fontSize:'.7rem', color:sub, marginTop:4, marginBottom:10 }}>of {batchData.batchSize} students in your dept</div>
+                <div style={{ fontSize:'.7rem', color:'#7a8ba8', marginTop:4, marginBottom:10 }}>of {batchData.batchSize} students in your dept</div>
                 <div style={{ height:8, background:'#f0f3fa', borderRadius:999, overflow:'hidden' }}>
                   <div style={{ height:'100%', width:`${batchData.percentile}%`, background:'linear-gradient(90deg,#531697,#13a1a5)', borderRadius:999 }}/>
                 </div>
               </div>
-            ) : <div style={{ textAlign:'center', color:muted, fontSize:'.78rem', padding:'10px 0' }}>More data needed for batch rank</div>}
+            ) : <div style={{ textAlign:'center', color:'#b0bec9', fontSize:'.78rem', padding:'10px 0' }}>More data needed for batch rank</div>}
           </div>
-          <div style={{ background:cardBg, borderRadius:14, padding:'16px 18px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:`1px solid ${cardBrd}`, flex:1 }}>
+          <div style={{ background:'#fff', borderRadius:14, padding:'16px 18px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa', flex:1 }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', color:txt }}>🥇 Top Performers</div>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', color:'#0f1a2e' }}>🥇 Top Performers</div>
               <button onClick={()=>setShowLeaderboard(true)} style={{ padding:'3px 8px', borderRadius:6, border:'1px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, fontSize:'.65rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>All →</button>
             </div>
             {leaderboard.length === 0 ? (
-              <div style={{ textAlign:'center', padding:'14px 0', color:muted, fontSize:'.75rem' }}>
+              <div style={{ textAlign:'center', padding:'14px 0', color:'#b0bec9', fontSize:'.75rem' }}>
                 <div style={{ fontSize:'1.5rem', marginBottom:4 }}>⏳</div>
                 Loading rankings…
               </div>
@@ -1161,10 +1199,10 @@ function StudentDash() {
                       {s.name?.charAt(0)?.toUpperCase()}
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontWeight:700, fontSize:'.78rem', color:txt, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      <div style={{ fontWeight:700, fontSize:'.78rem', color:'#0f1a2e', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                         {s.name}{isMe&&<span style={{ color:'#531697', fontSize:'.62rem' }}> (you)</span>}
                       </div>
-                      <div style={{ fontSize:'.62rem', color:muted }}>
+                      <div style={{ fontSize:'.62rem', color:'#b0bec9' }}>
                         🔥{s.streak||0}d · {s.department||'—'}
                       </div>
                     </div>
@@ -1183,9 +1221,9 @@ function StudentDash() {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
 
         {/* Announcements */}
-        <div style={{ background:cardBg, borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:`1px solid ${cardBrd}` }}>
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:txt }}>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>
               📢 Announcements
             </div>
             {newAnnouncementsCount > 0 && (
@@ -1208,21 +1246,21 @@ function StudentDash() {
                       <span style={{ padding:'1px 5px', borderRadius:999, background:`${col}20`, color:col, fontSize:'.6rem', fontWeight:700 }}>{a.priority.toUpperCase()}</span>
                     )}
                   </div>
-                  <div style={{ fontSize:'.76rem', color:sub, lineHeight:1.5 }}>{a.message}</div>
+                  <div style={{ fontSize:'.76rem', color:'#7a8ba8', lineHeight:1.5 }}>{a.message}</div>
                   {a.link && (
                     <a href={a.link.startsWith('http') ? a.link : `#`}
                        onClick={!a.link.startsWith('http') ? (e) => { e.preventDefault(); } : undefined}
                        target={a.link.startsWith('http') ? '_blank' : '_self'} rel="noreferrer"
                        style={{ fontSize:'.7rem', color:'#531697', fontWeight:700, marginTop:4, display:'inline-block' }}>🔗 View →</a>
                   )}
-                  <div style={{ fontSize:'.65rem', color:muted, marginTop:2 }}>
+                  <div style={{ fontSize:'.65rem', color:'#b0bec9', marginTop:2 }}>
                     {a.createdBy?.name && `By ${a.createdBy.name} · `}{new Date(a.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
                   </div>
                 </div>
               );
             })
           ) : (
-            <div style={{ textAlign:'center', padding:'20px 0', color:muted, fontSize:'.8rem' }}>
+            <div style={{ textAlign:'center', padding:'20px 0', color:'#b0bec9', fontSize:'.8rem' }}>
               <div style={{ fontSize:'1.5rem', marginBottom:6 }}>📭</div>
               No announcements from faculty
             </div>
@@ -1230,9 +1268,9 @@ function StudentDash() {
         </div>
 
         {/* Upcoming Drives */}
-        <div style={{ background:cardBg, borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:`1px solid ${cardBrd}` }}>
+        <div style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #f0f3fa' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:txt }}>🗓️ Upcoming Drives</div>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:'#0f1a2e' }}>🗓️ Upcoming Drives</div>
             <div style={{ display:'flex', gap:6 }}>
               <button onClick={()=>nav('/dashboard/drives')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid rgba(83,22,151,.2)', background:'rgba(83,22,151,.05)', color:'#531697', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>All Drives →</button>
               <button onClick={()=>nav('/dashboard/companies')} style={{ padding:'4px 10px', borderRadius:7, border:'1px solid rgba(19,161,165,.2)', background:'rgba(19,161,165,.05)', color:'#0d7a7e', fontWeight:700, fontSize:'.7rem', cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>Companies →</button>
@@ -1251,7 +1289,7 @@ function StudentDash() {
                   </div>
                   <div style={{ flex:1 }}>
                     <div style={{ fontWeight:800, fontSize:'.82rem', color:'#0f1a2e' }}>{d.companyName}</div>
-                    <div style={{ fontSize:'.68rem', color:sub }}>
+                    <div style={{ fontSize:'.68rem', color:'#7a8ba8' }}>
                       {d.role && `${d.role} · `}{new Date(d.driveDate).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
                     </div>
                   </div>
@@ -1271,8 +1309,8 @@ function StudentDash() {
                 <div key={c.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:9, marginBottom:6, background:`${urg}06`, border:`1px solid ${urg}20` }}>
                   {c.logoUrl && <img src={c.logoUrl} alt={c.name} style={{ width:28, height:28, objectFit:'contain', borderRadius:6, background:'#fff', padding:2 }} onError={e=>e.target.style.display='none'}/>}
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:700, fontSize:'.82rem', color:txt }}>{c.name}</div>
-                    <div style={{ fontSize:'.68rem', color:sub }}>{new Date(c.campusVisitDate).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                    <div style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{c.name}</div>
+                    <div style={{ fontSize:'.68rem', color:'#7a8ba8' }}>{new Date(c.campusVisitDate).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
                   </div>
                   <div style={{ textAlign:'right' }}>
                     <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.2rem', color:urg, lineHeight:1 }}>{days}</div>
@@ -1282,7 +1320,7 @@ function StudentDash() {
               );
             })
           ) : (
-            <div style={{ textAlign:'center', padding:'20px 0', color:muted, fontSize:'.8rem' }}>
+            <div style={{ textAlign:'center', padding:'20px 0', color:'#b0bec9', fontSize:'.8rem' }}>
               <div style={{ fontSize:'1.5rem', marginBottom:6 }}>🏢</div>
               No upcoming drives scheduled
             </div>
@@ -1299,16 +1337,6 @@ function StudentDash() {
 function FacultyDash() {
   const { user } = useAuth();
   const nav = useNavigate();
-  const { darkMode: dm = false } = useOutletContext() || {};
-  const cardBg  = dm ? '#1a2235' : '#fff';
-  const cardBrd = dm ? '#2d3a52' : '#f0f3fa';
-  const txt     = dm ? '#e2e8f0' : '#0f1a2e';
-  const sub     = dm ? '#94a3b8' : '#7a8ba8';
-  const muted   = dm ? '#64748b' : '#b0bec9';
-  const secBg   = dm ? '#111827' : '#f8f9fc';
-  const inpBg   = dm ? '#2d3748' : '#fff';
-  const inpBrd  = dm ? '#334155' : '#d0d7e8';
-  const rowHover = dm ? '#1e2d42' : '#fafbff';
   const [stats, setStats]         = useState({ notesCount:0, pendingDoubts:0, companiesCount:0, recentNotes:[] });
   const [students, setStudents]   = useState([]);
   const [yearFilter, setYearFilter] = useState('');
@@ -1423,22 +1451,22 @@ function FacultyDash() {
           <div style={{ background:'#fff', borderRadius:20, padding:'24px 28px', maxWidth:700, width:'100%', maxHeight:'88vh', overflowY:'auto', boxShadow:'0 20px 80px rgba(4,44,93,0.25)' }} onClick={e=>e.stopPropagation()}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
               <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1rem', color:'#0f1a2e' }}>📄 {previewNote.title}</div>
-              <button onClick={()=>setPreviewNote(null)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #e8edf5', background:secBg, cursor:'pointer', fontWeight:800, color:sub, fontSize:'1rem' }}>×</button>
+              <button onClick={()=>setPreviewNote(null)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #e8edf5', background:'#f8f9fc', cursor:'pointer', fontWeight:800, color:'#7a8ba8', fontSize:'1rem' }}>×</button>
             </div>
-            <div style={{ fontSize:'.78rem', color:sub, marginBottom:14 }}>{previewNote.subject} · {previewNote.department} · Year {previewNote.year} · by {previewNote.uploadedBy?.name}</div>
+            <div style={{ fontSize:'.78rem', color:'#7a8ba8', marginBottom:14 }}>{previewNote.subject} · {previewNote.department} · Year {previewNote.year} · by {previewNote.uploadedBy?.name}</div>
             {previewNote.fileUrl ? (
               previewNote.isDriveLink || previewNote.fileUrl?.includes('drive.google.com') || previewNote.fileUrl?.includes('docs.google.com') ? (
                 <iframe src={previewNote.fileUrl.replace('/view','/preview')} title="Note Preview" style={{ width:'100%', height:400, border:'1px solid #e8edf5', borderRadius:10 }} />
               ) : previewNote.fileType?.includes('pdf') ? (
                 <iframe src={previewNote.fileUrl} title="Note Preview" style={{ width:'100%', height:400, border:'1px solid #e8edf5', borderRadius:10 }} />
               ) : (
-                <div style={{ padding:20, background:secBg, borderRadius:10, textAlign:'center' }}>
+                <div style={{ padding:20, background:'#f8f9fc', borderRadius:10, textAlign:'center' }}>
                   <div style={{ fontSize:'2rem', marginBottom:8 }}>📁</div>
-                  <div style={{ fontSize:'.83rem', color:sub }}>Preview not available for this file type.</div>
+                  <div style={{ fontSize:'.83rem', color:'#7a8ba8' }}>Preview not available for this file type.</div>
                   <a href={previewNote.fileUrl} target="_blank" rel="noopener noreferrer" style={{ marginTop:10, display:'inline-block', padding:'7px 16px', borderRadius:8, background:'rgba(83,22,151,.08)', color:'#531697', fontWeight:700, fontSize:'.8rem', textDecoration:'none' }}>Open File →</a>
                 </div>
               )
-            ) : <div style={{ color:muted, textAlign:'center', padding:20 }}>No file URL available</div>}
+            ) : <div style={{ color:'#b0bec9', textAlign:'center', padding:20 }}>No file URL available</div>}
             <div style={{ display:'flex', gap:10, marginTop:16 }}>
               <button onClick={()=>{ actNote(previewNote._id,'approve'); setPreviewNote(null); }} style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background:'#dcfce7', color:'#166534', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.85rem' }}>✅ Approve Note</button>
               <button onClick={()=>{ actNote(previewNote._id,'reject'); setPreviewNote(null); }} style={{ flex:1, padding:'10px', borderRadius:9, border:'none', background:'#fee2e2', color:'#991b1b', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.85rem' }}>❌ Reject Note</button>
@@ -1450,7 +1478,7 @@ function FacultyDash() {
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18, flexWrap:'wrap', gap:10 }}>
         <div>
           <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', color:'#0f1a2e' }}>Hello, {user?.name} 🎓</h1>
-          <p style={{ color:sub, marginTop:3 }}>Department: {user?.department} · Manage notes, monitor students</p>
+          <p style={{ color:'#7a8ba8', marginTop:3 }}>Department: {user?.department} · Manage notes, monitor students</p>
         </div>
         <button onClick={()=>setShowEditProfile(true)} style={{ padding:'8px 16px', borderRadius:10, border:'1.5px solid rgba(83,22,151,.25)', background:'rgba(83,22,151,.06)', color:'#531697', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.82rem' }}>✏️ Edit Profile</button>
       </div>
@@ -1486,7 +1514,7 @@ function FacultyDash() {
                 onMouseOver={e=>e.currentTarget.style.background=`${a.c}10`}
                 onMouseOut={e=>e.currentTarget.style.background=`${a.c}06`}>
                 <div style={{ width:32, height:32, borderRadius:8, background:`${a.c}18`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.95rem', flexShrink:0 }}>{a.icon}</div>
-                <div><div style={{ fontWeight:700, fontSize:'.82rem', color:txt }}>{a.label}</div><div style={{ fontSize:'.7rem', color:sub }}>{a.sub}</div></div>
+                <div><div style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{a.label}</div><div style={{ fontSize:'.7rem', color:'#7a8ba8' }}>{a.sub}</div></div>
                 <span style={{ marginLeft:'auto', color:a.c }}>→</span>
               </button>
             ))}
@@ -1496,11 +1524,11 @@ function FacultyDash() {
             {stats.recentNotes?.length>0 ? stats.recentNotes.map(n=>(
               <div key={n._id} style={{ padding:'7px 0', borderBottom:'1px solid #f0f3fa' }}>
                 <div style={{ fontWeight:700, fontSize:'.8rem', color:'#0f1a2e' }}>{n.title}</div>
-                <div style={{ fontSize:'.68rem', color:muted, marginTop:1 }}>
+                <div style={{ fontSize:'.68rem', color:'#b0bec9', marginTop:1 }}>
                   {n.subject} · {new Date(n.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})} · <span style={{ color:n.status==='approved'?'#166534':'#92400e', fontWeight:700 }}>{n.status}</span>
                 </div>
               </div>
-            )) : <div style={{ color:muted, fontSize:'.8rem', padding:'10px 0' }}>No notes yet.</div>}
+            )) : <div style={{ color:'#b0bec9', fontSize:'.8rem', padding:'10px 0' }}>No notes yet.</div>}
           </div>
         </div>
       )}
@@ -1535,7 +1563,7 @@ function FacultyDash() {
                 </div>
               ))}
             </>
-          ) : <div style={{ color:muted, textAlign:'center', padding:30 }}>Loading department data…</div>}
+          ) : <div style={{ color:'#b0bec9', textAlign:'center', padding:30 }}>Loading department data…</div>}
         </div>
       )}
 
@@ -1543,25 +1571,25 @@ function FacultyDash() {
       {activeTab==='readiness2' && (
         <div className="card" style={{ padding:'20px 22px' }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:6 }}>🏢 Your Company Readiness Score</div>
-          <div style={{ fontSize:'.75rem', color:sub, marginBottom:14 }}>Scores calculated from your skills, ATS score, and each company's JD requirements</div>
+          <div style={{ fontSize:'.75rem', color:'#7a8ba8', marginBottom:14 }}>Scores calculated from your skills, ATS score, and each company's JD requirements</div>
           {compReadiness.length>0 ? compReadiness.slice(0,8).map(c=>{
             const mc = c.matchScore>=75?'#47d372':c.matchScore>=50?'#f59e0b':'#ef4444';
             return (
-              <div key={c.name} style={{ marginBottom:12, padding:'10px 12px', borderRadius:9, border:'1px solid #e8edf5', background:rowHover }}>
+              <div key={c.name} style={{ marginBottom:12, padding:'10px 12px', borderRadius:9, border:'1px solid #e8edf5', background:'#fafbff' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:5 }}>
-                  <div style={{ width:80, fontWeight:700, fontSize:'.82rem', color:txt, flexShrink:0 }}>{c.name}</div>
+                  <div style={{ width:80, fontWeight:700, fontSize:'.82rem', color:'#0f1a2e', flexShrink:0 }}>{c.name}</div>
                   <div style={{ flex:1, height:7, background:'#f0f3fa', borderRadius:999 }}>
                     <div style={{ height:'100%', width:`${c.matchScore}%`, background:`linear-gradient(90deg,${mc},#13a1a5)`, borderRadius:999, transition:'width .8s' }}/>
                   </div>
                   <div style={{ fontWeight:800, fontSize:'.85rem', color:mc, flexShrink:0 }}>{c.matchScore}%</div>
                 </div>
-                <div style={{ fontSize:'.68rem', color:sub }}>
+                <div style={{ fontSize:'.68rem', color:'#7a8ba8' }}>
                   {c.breakdown.skillMatch} · {c.breakdown.atsContrib} · {c.breakdown.branchStatus}
                 </div>
                 {c.missingSkills.length>0 && <div style={{ fontSize:'.67rem', color:'#991b1b', marginTop:3 }}>Missing: {c.missingSkills.join(', ')}</div>}
               </div>
             );
-          }) : <div style={{ color:muted, textAlign:'center', padding:30 }}>No company data available</div>}
+          }) : <div style={{ color:'#b0bec9', textAlign:'center', padding:30 }}>No company data available</div>}
         </div>
       )}
 
@@ -1569,13 +1597,13 @@ function FacultyDash() {
       {activeTab==='notes' && (
         <div className="card" style={{ padding:'20px 22px' }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:14 }}>📋 Notes Awaiting Review</div>
-          {pendingNotes.length===0 ? <div style={{ color:sub, fontSize:'.85rem' }}>✅ No notes pending review!</div> :
+          {pendingNotes.length===0 ? <div style={{ color:'#7a8ba8', fontSize:'.85rem' }}>✅ No notes pending review!</div> :
             pendingNotes.map(n=>(
-              <div key={n._id} style={{ padding:'14px 16px', borderRadius:10, border:'1px solid #e8edf5', marginBottom:10, background:rowHover }}>
+              <div key={n._id} style={{ padding:'14px 16px', borderRadius:10, border:'1px solid #e8edf5', marginBottom:10, background:'#fafbff' }}>
                 <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:10 }}>
                   <div style={{ flex:1 }}>
                     <div style={{ fontWeight:700, fontSize:'.87rem', color:'#0f1a2e' }}>{n.title}</div>
-                    <div style={{ fontSize:'.73rem', color:sub, marginTop:2 }}>{n.subject} · {n.department} · Year {n.year} · by {n.uploadedBy?.name}</div>
+                    <div style={{ fontSize:'.73rem', color:'#7a8ba8', marginTop:2 }}>{n.subject} · {n.department} · Year {n.year} · by {n.uploadedBy?.name}</div>
                     {n.description && <div style={{ fontSize:'.75rem', color:'#3d4e6b', marginTop:4, lineHeight:1.5 }}>{n.description}</div>}
                   </div>
                   <span style={{ padding:'2px 8px', borderRadius:999, background:'rgba(245,158,11,.1)', color:'#92400e', fontSize:'.68rem', fontWeight:700, flexShrink:0 }}>Pending</span>
@@ -1601,18 +1629,18 @@ function FacultyDash() {
             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:14 }}>🏆 Student Leaderboard</div>
             {lbProfileStudent ? (
               <div>
-                <button onClick={()=>{setLbProfileStudent(null);setLbProfileData(null);}} style={{ marginBottom:12, padding:'6px 14px', borderRadius:8, border:'1px solid #d0d7e8', background:'transparent', color:sub, fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem' }}>← Back to Leaderboard</button>
+                <button onClick={()=>{setLbProfileStudent(null);setLbProfileData(null);}} style={{ marginBottom:12, padding:'6px 14px', borderRadius:8, border:'1px solid #d0d7e8', background:'transparent', color:'#7a8ba8', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.8rem' }}>← Back to Leaderboard</button>
                 <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1rem', color:'#0f1a2e', marginBottom:4 }}>{lbProfileStudent.name}</div>
-                <div style={{ fontSize:'.78rem', color:sub, marginBottom:12 }}>{lbProfileStudent.department} · Year {lbProfileStudent.year} · {lbProfileStudent.rollNumber||'—'}</div>
+                <div style={{ fontSize:'.78rem', color:'#7a8ba8', marginBottom:12 }}>{lbProfileStudent.department} · Year {lbProfileStudent.year} · {lbProfileStudent.rollNumber||'—'}</div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:14 }}>
                   {[['ATS',lbProfileStudent.atsScore||0,'#531697'],['Streak',`${lbProfileStudent.streak||0}d`,'#f59e0b'],['Solved',lbProfileStudent.totalProblemsSolved||0,'#13a1a5'],['Level',lbProfileStudent.skillLevel||'—','#47d372']].map(([l,v,c])=>(
-                    <div key={l} style={{ textAlign:'center', padding:'10px 6px', background:secBg, borderRadius:10 }}>
+                    <div key={l} style={{ textAlign:'center', padding:'10px 6px', background:'#f8f9fc', borderRadius:10 }}>
                       <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:c }}>{v}</div>
-                      <div style={{ fontSize:'.65rem', color:muted, fontWeight:700 }}>{l}</div>
+                      <div style={{ fontSize:'.65rem', color:'#b0bec9', fontWeight:700 }}>{l}</div>
                     </div>
                   ))}
                 </div>
-                {!lbProfileData && <div style={{ textAlign:'center', padding:20, color:muted }}>Loading profile…</div>}
+                {!lbProfileData && <div style={{ textAlign:'center', padding:20, color:'#b0bec9' }}>Loading profile…</div>}
                 {lbProfileData?.aptStats?.map(s => {
                   const pct = Math.round(s.accuracy||0);
                   const c = pct>=70?'#47d372':pct>=45?'#f59e0b':'#ef4444';
@@ -1621,6 +1649,28 @@ function FacultyDash() {
                     <div style={{ height:5, background:'#f0f3fa', borderRadius:999 }}><div style={{ height:'100%', width:`${pct}%`, background:`linear-gradient(90deg,${c},#13a1a5)`, borderRadius:999 }}/></div>
                   </div>;
                 })}
+                {/* Heatmap + Donut for student profile in faculty leaderboard */}
+                {lbProfileData && (() => {
+                  const sp = lbProfileStudent;
+                  const myProb = sp?.totalProblemsSolved || 0;
+                  const easy   = lbProfileData?.problemStats?.easy   || Math.floor(myProb*0.45);
+                  const medium = lbProfileData?.problemStats?.medium || Math.floor(myProb*0.38);
+                  const hard   = lbProfileData?.problemStats?.hard   || Math.max(0, myProb-Math.floor(myProb*0.45)-Math.floor(myProb*0.38));
+                  const subs   = lbProfileData?.submissionDates || [];
+                  return (
+                    <div style={{ marginTop:14 }}>
+                      <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', color:'#0f1a2e', marginBottom:10 }}>📊 Coding Activity</div>
+                      <div style={{ marginBottom:12 }}>
+                        <div style={{ fontSize:'.7rem', fontWeight:700, color:'#3d4e6b', marginBottom:8 }}>📅 Monthly Heatmap</div>
+                        <ActivityHeatmap submissions={subs} currentStreak={sp?.streak||0} maxStreak={sp?.maxStreak||sp?.streak||0} compact={true}/>
+                      </div>
+                      <div style={{ borderTop:'1px solid #f0f3fa', paddingTop:12 }}>
+                        <div style={{ fontSize:'.7rem', fontWeight:700, color:'#3d4e6b', marginBottom:8 }}>💻 Problems Solved</div>
+                        <DonutChart easy={easy} medium={medium} hard={hard} total={myProb}/>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ) : (
               <>
@@ -1629,11 +1679,11 @@ function FacultyDash() {
                 {filtered.map((s,i) => {
                   const globalIdx = leaderboard.indexOf(s);
                   return (
-                    <div key={s._id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, marginBottom:6, background:rowHover, border:'1px solid #f0f3fa' }}>
-                      <div style={{ width:28, textAlign:'center', fontSize:globalIdx<3?'1.1rem':'.82rem', fontWeight:800, color:sub, flexShrink:0 }}>{medals[globalIdx]||`#${globalIdx+1}`}</div>
+                    <div key={s._id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:10, marginBottom:6, background:'#fafbff', border:'1px solid #f0f3fa' }}>
+                      <div style={{ width:28, textAlign:'center', fontSize:globalIdx<3?'1.1rem':'.82rem', fontWeight:800, color:'#7a8ba8', flexShrink:0 }}>{medals[globalIdx]||`#${globalIdx+1}`}</div>
                       <div style={{ flex:1, minWidth:0 }}>
                         <div style={{ fontWeight:700, fontSize:'.85rem', color:'#0f1a2e' }}>{s.name}</div>
-                        <div style={{ fontSize:'.68rem', color:muted }}>{s.department} · Y{s.year} · <span style={{ color:lc2[s.skillLevel]||'#531697' }}>{s.skillLevel}</span> · 🔥{s.streak}d</div>
+                        <div style={{ fontSize:'.68rem', color:'#b0bec9' }}>{s.department} · Y{s.year} · <span style={{ color:lc2[s.skillLevel]||'#531697' }}>{s.skillLevel}</span> · 🔥{s.streak}d</div>
                       </div>
                       <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', background:'linear-gradient(135deg,#531697,#13a1a5)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', flexShrink:0, marginRight:8 }}>{s.totalScore}</div>
                       <button onClick={async()=>{ setLbProfileStudent(s); const d=await apiFetch(`/analytics/student-profile/${s._id}`); setLbProfileData(d); }}
@@ -1641,7 +1691,7 @@ function FacultyDash() {
                     </div>
                   );
                 })}
-                {filtered.length===0 && <div style={{ textAlign:'center', padding:24, color:muted }}>No matching students</div>}
+                {filtered.length===0 && <div style={{ textAlign:'center', padding:24, color:'#b0bec9' }}>No matching students</div>}
               </>
             )}
           </div>
@@ -1653,7 +1703,7 @@ function FacultyDash() {
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           <div className="card" style={{ padding:'16px 18px' }}>
             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:10 }}>🔍 Skill Gaps Across Batch</div>
-            <div style={{ fontSize:'.72rem', color:sub, marginBottom:10 }}>{weakTopics?.studentsAnalyzed||0} of {weakTopics?.totalStudents||0} students analysed</div>
+            <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginBottom:10 }}>{weakTopics?.studentsAnalyzed||0} of {weakTopics?.totalStudents||0} students analysed</div>
             {(weakTopics?.weakTopics||[]).map(t=>(
               <div key={t.skill} style={{ marginBottom:8 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:'.75rem', fontWeight:700, color:'#3d4e6b', marginBottom:3 }}>
@@ -1665,17 +1715,17 @@ function FacultyDash() {
                 </div>
               </div>
             ))}
-            {(!weakTopics?.weakTopics?.length) && <div style={{ color:muted, fontSize:'.82rem' }}>Run SkillPath analyses to see batch gaps</div>}
+            {(!weakTopics?.weakTopics?.length) && <div style={{ color:'#b0bec9', fontSize:'.82rem' }}>Run SkillPath analyses to see batch gaps</div>}
           </div>
           <div className="card" style={{ padding:'16px 18px' }}>
             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.88rem', marginBottom:10 }}>💻 Problem-Solving Weak Areas</div>
             {(weakTopics?.problemWeakAreas||[]).map(t=>(
               <div key={t.topic} style={{ padding:'8px 10px', borderRadius:8, border:'1px solid #e8edf5', marginBottom:7, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{ fontWeight:700, fontSize:'.8rem', color:'#0f1a2e' }}>{t.topic||'—'}</span>
-                <span style={{ fontSize:'.72rem', color:sub }}>{t.solved}/{t.total} solved</span>
+                <span style={{ fontSize:'.72rem', color:'#7a8ba8' }}>{t.solved}/{t.total} solved</span>
               </div>
             ))}
-            {(!weakTopics?.problemWeakAreas?.length)&&<div style={{ color:muted, fontSize:'.82rem' }}>No problem data yet</div>}
+            {(!weakTopics?.problemWeakAreas?.length)&&<div style={{ color:'#b0bec9', fontSize:'.82rem' }}>No problem data yet</div>}
           </div>
         </div>
       )}
@@ -1688,7 +1738,7 @@ function FacultyDash() {
               <div key={l} className="card" style={{ padding:'14px 16px', borderLeft:`3px solid ${c}` }}>
                 <div>{ic}</div>
                 <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', color:c, lineHeight:1 }}>{v||0}</div>
-                <div style={{ fontSize:'.75rem', color:sub, marginTop:3 }}>{l}</div>
+                <div style={{ fontSize:'.75rem', color:'#7a8ba8', marginTop:3 }}>{l}</div>
               </div>
             ))}
           </div>
@@ -1699,7 +1749,7 @@ function FacultyDash() {
                   <span style={{ fontWeight:700, fontSize:'.85rem', color:'#0f1a2e' }}>{s.name}</span>
                   <span style={{ padding:'1px 7px', borderRadius:999, background:s.riskLevel==='high'?'#fee2e2':'rgba(245,158,11,.1)', color:s.riskLevel==='high'?'#991b1b':'#92400e', fontSize:'.65rem', fontWeight:700 }}>{s.riskLevel}</span>
                 </div>
-                <div style={{ fontSize:'.72rem', color:sub, marginTop:2 }}>{s.rollNumber} · Year {s.year}</div>
+                <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginTop:2 }}>{s.rollNumber} · Year {s.year}</div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:4, marginTop:5 }}>
                   {s.risks?.map(r=><span key={r} style={{ padding:'2px 7px', borderRadius:999, background:'rgba(239,68,68,.06)', color:'#991b1b', fontSize:'.67rem', fontWeight:600, border:'1px solid rgba(239,68,68,.15)' }}>⚠ {r}</span>)}
                 </div>
@@ -1723,7 +1773,7 @@ function FacultyDash() {
               ))}
             </div>
           </div>
-          {loadingStudents ? <div style={{ textAlign:'center', padding:20, color:muted }}>Loading…</div> : (
+          {loadingStudents ? <div style={{ textAlign:'center', padding:20, color:'#b0bec9' }}>Loading…</div> : (
             <div style={{ overflowX:'auto' }}>
               <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.77rem' }}>
                 <thead><tr style={{ borderBottom:'2px solid #e8edf5' }}>
@@ -1735,9 +1785,9 @@ function FacultyDash() {
                     return (
                       <tr key={s._id} style={{ borderBottom:'1px solid #f0f3fa' }}>
                         <td style={{ padding:'7px 8px', fontWeight:700, color:'#0f1a2e' }}>{s.name}</td>
-                        <td style={{ padding:'7px 8px', color:sub }}>{s.rollNumber||'—'}</td>
-                        <td style={{ padding:'7px 8px', color:sub }}>Y{s.year||'—'}</td>
-                        <td style={{ padding:'7px 8px', color:sub }}>{s.department}</td>
+                        <td style={{ padding:'7px 8px', color:'#7a8ba8' }}>{s.rollNumber||'—'}</td>
+                        <td style={{ padding:'7px 8px', color:'#7a8ba8' }}>Y{s.year||'—'}</td>
+                        <td style={{ padding:'7px 8px', color:'#7a8ba8' }}>{s.department}</td>
                         <td style={{ padding:'7px 8px' }}><span style={{ padding:'1px 6px', borderRadius:999, background:`${lc2[s.skillLevel]||'#531697'}15`, color:lc2[s.skillLevel]||'#531697', fontWeight:700, fontSize:'.67rem' }}>{s.skillLevel||'Beginner'}</span></td>
                         <td style={{ padding:'7px 8px', color:'#3d4e6b' }}>🔥{s.streak||0}</td>
                         <td style={{ padding:'7px 8px', fontWeight:800, color:'#531697' }}>{s.atsScore||'—'}</td>
@@ -1747,7 +1797,7 @@ function FacultyDash() {
                       </tr>
                     );
                   })}
-                  {!students.length&&<tr><td colSpan={7} style={{ padding:14, textAlign:'center', color:muted }}>No students found</td></tr>}
+                  {!students.length&&<tr><td colSpan={7} style={{ padding:14, textAlign:'center', color:'#b0bec9' }}>No students found</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1764,22 +1814,22 @@ function FacultyDash() {
               <div style={{ gridColumn:'1/-1' }}>
                 <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>Title *</label>
                 <input value={annForm.title} onChange={e=>setAnnForm(f=>({...f,title:e.target.value}))} placeholder="e.g. Placement Drive on 15th Jan"
-                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:rowHover, boxSizing:'border-box' }} />
+                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff', boxSizing:'border-box' }} />
               </div>
               <div style={{ gridColumn:'1/-1' }}>
                 <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>Message *</label>
                 <textarea value={annForm.message} onChange={e=>setAnnForm(f=>({...f,message:e.target.value}))} rows={3} placeholder="Announcement details…"
-                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:rowHover, resize:'vertical', boxSizing:'border-box' }} />
+                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff', resize:'vertical', boxSizing:'border-box' }} />
               </div>
               <div style={{ gridColumn:'1/-1' }}>
                 <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>Link (optional)</label>
                 <input value={annForm.link} onChange={e=>setAnnForm(f=>({...f,link:e.target.value}))} placeholder="https://…"
-                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:rowHover, boxSizing:'border-box' }} />
+                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff', boxSizing:'border-box' }} />
               </div>
               <div>
                 <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>Priority</label>
                 <select value={annForm.priority} onChange={e=>setAnnForm(f=>({...f,priority:e.target.value}))}
-                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:rowHover }}>
+                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff' }}>
                   <option value="normal">Normal</option>
                   <option value="high">High</option>
                   <option value="urgent">Urgent</option>
@@ -1788,7 +1838,7 @@ function FacultyDash() {
               <div>
                 <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>Target</label>
                 <select value={annForm.targetRole} onChange={e=>setAnnForm(f=>({...f,targetRole:e.target.value}))}
-                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:rowHover }}>
+                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff' }}>
                   <option value="all">All Students</option>
                   <option value="student">Students Only</option>
                   <option value="faculty">Faculty Only</option>
@@ -1797,7 +1847,7 @@ function FacultyDash() {
               <div>
                 <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>Department (optional)</label>
                 <select value={annForm.targetDept} onChange={e=>setAnnForm(f=>({...f,targetDept:e.target.value}))}
-                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:rowHover }}>
+                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff' }}>
                   <option value="">All Departments</option>
                   {['CSE','CSAIML','IT','ECE','Mechanical','Civil','Other'].map(d=><option key={d}>{d}</option>)}
                 </select>
@@ -1805,7 +1855,7 @@ function FacultyDash() {
               <div>
                 <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>Year (optional)</label>
                 <select value={annForm.targetYear} onChange={e=>setAnnForm(f=>({...f,targetYear:e.target.value}))}
-                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:rowHover }}>
+                  style={{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff' }}>
                   <option value="">All Years</option>
                   {[1,2,3,4].map(y=><option key={y} value={y}>Year {y}</option>)}
                 </select>
@@ -1828,22 +1878,22 @@ function FacultyDash() {
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
               <div>
                 <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.15rem', color:'#0f1a2e' }}>{selectedStudent.name}</div>
-                <div style={{ fontSize:'.78rem', color:sub, marginTop:2 }}>{selectedStudent.department} · Year {selectedStudent.year} · {selectedStudent.rollNumber||'No roll no.'}</div>
+                <div style={{ fontSize:'.78rem', color:'#7a8ba8', marginTop:2 }}>{selectedStudent.department} · Year {selectedStudent.year} · {selectedStudent.rollNumber||'No roll no.'}</div>
               </div>
-              <button onClick={()=>{setSelectedStudent(null);setStudentProfile(null);}} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #e8edf5', background:secBg, cursor:'pointer', fontWeight:800, color:sub, fontSize:'1rem' }}>×</button>
+              <button onClick={()=>{setSelectedStudent(null);setStudentProfile(null);}} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #e8edf5', background:'#f8f9fc', cursor:'pointer', fontWeight:800, color:'#7a8ba8', fontSize:'1rem' }}>×</button>
             </div>
 
             {/* Quick stats */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:16 }}>
               {[['ATS',selectedStudent.atsScore||0,'#531697'],['Streak',`${selectedStudent.streak||0}d`,'#f59e0b'],['Solved',selectedStudent.totalProblemsSolved||0,'#13a1a5'],['Level',selectedStudent.skillLevel||'—','#47d372']].map(([l,v,c])=>(
-                <div key={l} style={{ textAlign:'center', padding:'10px 6px', background:secBg, borderRadius:10 }}>
+                <div key={l} style={{ textAlign:'center', padding:'10px 6px', background:'#f8f9fc', borderRadius:10 }}>
                   <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', color:c }}>{v}</div>
-                  <div style={{ fontSize:'.65rem', color:muted, fontWeight:700 }}>{l}</div>
+                  <div style={{ fontSize:'.65rem', color:'#b0bec9', fontWeight:700 }}>{l}</div>
                 </div>
               ))}
             </div>
 
-            {profileLoading && <div style={{ textAlign:'center', padding:30, color:muted }}>Loading profile data…</div>}
+            {profileLoading && <div style={{ textAlign:'center', padding:30, color:'#b0bec9' }}>Loading profile data…</div>}
 
             {studentProfile && !profileLoading && (
               <>
@@ -1851,7 +1901,7 @@ function FacultyDash() {
                 {studentProfile.aptStats?.length > 0 && (
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.82rem', color:'#0f1a2e', marginBottom:8 }}>🎯 Aptitude Performance (by topic)</div>
-                    <div style={{ fontSize:'.72rem', color:sub, marginBottom:8 }}>
+                    <div style={{ fontSize:'.72rem', color:'#7a8ba8', marginBottom:8 }}>
                       {studentProfile.summary.correctApt}/{studentProfile.summary.totalApt} correct · {studentProfile.summary.accuracy}% accuracy
                     </div>
                     {studentProfile.aptStats.map(s=>{
@@ -1902,7 +1952,7 @@ function FacultyDash() {
                         <span>{a.correct?'✅':'❌'}</span>
                         <div style={{ flex:1 }}>
                           <div style={{ fontSize:'.78rem', fontWeight:600, color:'#0f1a2e' }}>{a.questionId?.question?.slice(0,60)||'Question'}…</div>
-                          <div style={{ fontSize:'.67rem', color:muted }}>{a.questionId?.topic} · {a.questionId?.difficulty} · {new Date(a.attemptedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+                          <div style={{ fontSize:'.67rem', color:'#b0bec9' }}>{a.questionId?.topic} · {a.questionId?.difficulty} · {new Date(a.attemptedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
                         </div>
                       </div>
                     ))}
@@ -1910,7 +1960,7 @@ function FacultyDash() {
                 )}
 
                 {!studentProfile.aptStats?.length && !studentProfile.codingStats?.length && (
-                  <div style={{ textAlign:'center', padding:20, color:muted, fontSize:'.82rem' }}>No activity data yet for this student.</div>
+                  <div style={{ textAlign:'center', padding:20, color:'#b0bec9', fontSize:'.82rem' }}>No activity data yet for this student.</div>
                 )}
               </>
             )}
@@ -1959,7 +2009,7 @@ function AdminDash() {
     <div style={{ fontFamily:"'Nunito',sans-serif" }}>
       <div style={{ marginBottom:18 }}>
         <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', color:'#0f1a2e' }}>⚙️ Admin Overview</h1>
-        <p style={{ color:sub, marginTop:3 }}>Full system visibility — students, faculty, and placement readiness.</p>
+        <p style={{ color:'#7a8ba8', marginTop:3 }}>Full system visibility — students, faculty, and placement readiness.</p>
       </div>
 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:14 }}>
@@ -1986,7 +2036,7 @@ function AdminDash() {
               <button key={a.label} onClick={()=>nav(a.to)} style={{ width:'100%', display:'flex', alignItems:'center', gap:9, padding:'9px 11px', borderRadius:9, border:`1px solid ${a.c}25`, background:`${a.c}06`, cursor:'pointer', marginBottom:7, textAlign:'left' }}
                 onMouseOver={e=>e.currentTarget.style.background=`${a.c}12`} onMouseOut={e=>e.currentTarget.style.background=`${a.c}06`}>
                 <div style={{ width:30, height:30, borderRadius:7, background:`${a.c}18`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.9rem', flexShrink:0 }}>{a.icon}</div>
-                <div><div style={{ fontWeight:700, fontSize:'.82rem', color:txt }}>{a.label}</div><div style={{ fontSize:'.68rem', color:sub }}>{a.sub}</div></div>
+                <div><div style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{a.label}</div><div style={{ fontSize:'.68rem', color:'#7a8ba8' }}>{a.sub}</div></div>
                 <span style={{ marginLeft:'auto', color:a.c, fontSize:'.8rem' }}>→</span>
               </button>
             ))}
@@ -1999,14 +2049,14 @@ function AdminDash() {
                 <div key={level} style={{ marginBottom:12 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                     <span style={{ fontWeight:700, fontSize:'.8rem', color:'#3d4e6b' }}>{level}</span>
-                    <span style={{ fontSize:'.72rem', color:muted }}>{count} ({pct}%)</span>
+                    <span style={{ fontSize:'.72rem', color:'#b0bec9' }}>{count} ({pct}%)</span>
                   </div>
                   <div style={{ height:7, background:'#f0f3fa', borderRadius:999 }}>
                     <div style={{ height:'100%', width:`${pct}%`, background:lc[level]||'#531697', borderRadius:999, transition:'width .8s' }}/>
                   </div>
                 </div>
               );
-            }) : <div style={{ color:muted }}>Loading…</div>}
+            }) : <div style={{ color:'#b0bec9' }}>Loading…</div>}
           </div>
         </div>
       )}
@@ -2037,8 +2087,8 @@ function AdminDash() {
               <div key={d.dept} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:'1px solid #f0f3fa' }}>
                 <div style={{ width:26, height:26, borderRadius:'50%', background:i===0?'linear-gradient(135deg,#f59e0b,#ef4444)':i===1?'linear-gradient(135deg,#9ca3af,#6b7280)':i===2?'linear-gradient(135deg,#92400e,#b45309)':'#f0f3fa', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.72rem', color:i<=2?'#fff':'#7a8ba8', flexShrink:0 }}>{i+1}</div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontWeight:700, fontSize:'.82rem', color:txt }}>{d.dept}</div>
-                  <div style={{ fontSize:'.68rem', color:muted }}>{d.count} students · avg ATS {d.avgAts}</div>
+                  <div style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{d.dept}</div>
+                  <div style={{ fontSize:'.68rem', color:'#b0bec9' }}>{d.count} students · avg ATS {d.avgAts}</div>
                 </div>
                 <div style={{ fontWeight:800, fontSize:'.9rem', color:d.readiness>=70?'#47d372':d.readiness>=50?'#f59e0b':'#ef4444' }}>{d.readiness}%</div>
               </div>
@@ -2051,16 +2101,16 @@ function AdminDash() {
       {activeTab==='demand' && demand && (
         <div className="card" style={{ padding:'18px 22px' }}>
           <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:6 }}>📊 Industry Demand vs Student Supply</div>
-          <div style={{ fontSize:'.73rem', color:sub, marginBottom:14 }}>Based on {demand.totalCompanies} companies · {demand.totalStudents} students · Gap = demand − supply</div>
+          <div style={{ fontSize:'.73rem', color:'#7a8ba8', marginBottom:14 }}>Based on {demand.totalCompanies} companies · {demand.totalStudents} students · Gap = demand − supply</div>
           {(demand.demandGap||[]).map(d=>(
             <div key={d.skill} style={{ padding:'10px 0', borderBottom:'1px solid #f0f3fa' }}>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                <span style={{ fontWeight:700, fontSize:'.82rem', color:txt, textTransform:'capitalize' }}>{d.skill}</span>
+                <span style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e', textTransform:'capitalize' }}>{d.skill}</span>
                 <span style={{ fontSize:'.72rem', fontWeight:700, color:d.gap>30?'#ef4444':d.gap>10?'#f59e0b':'#47d372' }}>Gap: {d.gap>0?'+':''}+{d.gap}%</span>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-                <div><div style={{ fontSize:'.65rem', color:sub, marginBottom:2 }}>Companies demand {d.demand}%</div><div style={{ height:5, background:'#f0f3fa', borderRadius:999 }}><div style={{ height:'100%', width:`${d.demand}%`, background:'#531697', borderRadius:999 }}/></div></div>
-                <div><div style={{ fontSize:'.65rem', color:sub, marginBottom:2 }}>Students have {d.supply}%</div><div style={{ height:5, background:'#f0f3fa', borderRadius:999 }}><div style={{ height:'100%', width:`${d.supply}%`, background:'#47d372', borderRadius:999 }}/></div></div>
+                <div><div style={{ fontSize:'.65rem', color:'#7a8ba8', marginBottom:2 }}>Companies demand {d.demand}%</div><div style={{ height:5, background:'#f0f3fa', borderRadius:999 }}><div style={{ height:'100%', width:`${d.demand}%`, background:'#531697', borderRadius:999 }}/></div></div>
+                <div><div style={{ fontSize:'.65rem', color:'#7a8ba8', marginBottom:2 }}>Students have {d.supply}%</div><div style={{ height:5, background:'#f0f3fa', borderRadius:999 }}><div style={{ height:'100%', width:`${d.supply}%`, background:'#47d372', borderRadius:999 }}/></div></div>
               </div>
             </div>
           ))}
@@ -2097,9 +2147,9 @@ function AdminDash() {
                 {(cohort?.students||[]).map(s=>(
                   <tr key={s._id} style={{ borderBottom:'1px solid #f0f3fa' }}>
                     <td style={{ padding:'7px 8px', fontWeight:700, color:'#0f1a2e' }}>{s.name}</td>
-                    <td style={{ padding:'7px 8px', color:sub }}>{s.rollNumber||'—'}</td>
-                    <td style={{ padding:'7px 8px', color:sub }}>Y{s.year||'—'}</td>
-                    <td style={{ padding:'7px 8px', color:sub }}>{s.department}</td>
+                    <td style={{ padding:'7px 8px', color:'#7a8ba8' }}>{s.rollNumber||'—'}</td>
+                    <td style={{ padding:'7px 8px', color:'#7a8ba8' }}>Y{s.year||'—'}</td>
+                    <td style={{ padding:'7px 8px', color:'#7a8ba8' }}>{s.department}</td>
                     <td style={{ padding:'7px 8px' }}><span style={{ padding:'1px 6px', borderRadius:999, background:`${lc[s.skillLevel]||'#531697'}15`, color:lc[s.skillLevel]||'#531697', fontWeight:700, fontSize:'.67rem' }}>{s.skillLevel||'Beginner'}</span></td>
                     <td style={{ padding:'7px 8px', color:'#3d4e6b' }}>🔥{s.streak||0}</td>
                     <td style={{ padding:'7px 8px', fontWeight:800, color:'#531697' }}>{s.atsScore||'—'}</td>
@@ -2122,8 +2172,8 @@ function AdminDash() {
                     {cohort.faculty.map(f=>(
                       <tr key={f._id} style={{ borderBottom:'1px solid #f0f3fa' }}>
                         <td style={{ padding:'7px 8px', fontWeight:700, color:'#042c5d' }}>{f.name}</td>
-                        <td style={{ padding:'7px 8px', color:sub }}>{f.department}</td>
-                        <td style={{ padding:'7px 8px', color:muted, fontSize:'.7rem' }}>{f.createdAt?new Date(f.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—'}</td>
+                        <td style={{ padding:'7px 8px', color:'#7a8ba8' }}>{f.department}</td>
+                        <td style={{ padding:'7px 8px', color:'#b0bec9', fontSize:'.7rem' }}>{f.createdAt?new Date(f.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—'}</td>
                       </tr>
                     ))}
                   </tbody>
