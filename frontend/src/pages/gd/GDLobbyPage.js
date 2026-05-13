@@ -1,185 +1,287 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { io } from 'socket.io-client';
 
 const API  = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-const tk   = () => ({ Authorization:`Bearer ${localStorage.getItem('pragati_token')}`, 'Content-Type':'application/json' });
-
-const COMPANIES = ['Any','TCS','Infosys','Wipro','Cognizant','Capgemini','Accenture'];
+const BASE = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api').replace('/api','');
+const tk   = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('pragati_token')}` });
 const GRAD = 'linear-gradient(135deg,#531697,#13a1a5)';
 
-export default function GDLobbyPage() {
-  const { user }    = useAuth();
-  const nav         = useNavigate();
-  const [rooms, setRooms]     = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [joinCode, setJoinCode] = useState('');
-  const [form, setForm]   = useState({
-    company:'Any', difficulty:'Medium', minParticipants:3, maxParticipants:5,
-    durationSeconds:600, language:'English', isPrivate:false,
-  });
-  const [msg, setMsg] = useState('');
+const selectStyle = {
+  width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8',
+  fontFamily:"'Nunito',sans-serif", fontSize:'.85rem', fontWeight:600, outline:'none', background:'#fff',
+};
+const inputStyle = {
+  width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8',
+  fontFamily:"'Nunito',sans-serif", fontSize:'.85rem', fontWeight:600, outline:'none', background:'#fff', boxSizing:'border-box',
+};
 
-  const loadRooms = useCallback(async () => {
-    setLoading(true);
+function FormField({ label, children }) {
+  return (
+    <div>
+      <label style={{ display:'block', fontSize:'.72rem', fontWeight:700, color:'#7a8ba8', marginBottom:5, textTransform:'uppercase', letterSpacing:'0.04em' }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+export default function GDLobbyPage() {
+  const nav  = useNavigate();
+  const { user } = useAuth();
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [joinCode, setJoinCode] = useState('');
+  const [notifications, setNotifications] = useState([]);
+  const [form, setForm] = useState({
+    company:'TCS', difficulty:'Medium', minParticipants:3,
+    maxParticipants:5, durationSeconds:600, language:'English', isPrivate:false,
+  });
+  const socketRef    = useRef(null);
+  const notifTimers  = useRef({});
+
+  async function fetchRooms() {
     try {
-      const d = await fetch(`${API}/gd/rooms`, { headers:tk() }).then(r=>r.json());
+      const r = await fetch(`${API}/gd/rooms`, { headers: tk() });
+      const d = await r.json();
       setRooms(d.rooms || []);
-    } finally { setLoading(false); }
+    } catch {}
+    setLoading(false);
+  }
+
+  useEffect(() => { fetchRooms(); }, []);
+
+  // Global socket for new-room notifications
+  useEffect(() => {
+    const token = localStorage.getItem('pragati_token');
+    const socket = io(BASE, { auth:{ token }, transports:['websocket'], reconnection:true });
+    socketRef.current = socket;
+    socket.on('gd-room-created', (data) => {
+      const id = Date.now();
+      setNotifications(n => [...n.slice(-3), { id, ...data }]);
+      notifTimers.current[id] = setTimeout(() => {
+        setNotifications(n => n.filter(x => x.id !== id));
+        delete notifTimers.current[id];
+      }, 8000);
+      fetchRooms();
+    });
+    return () => {
+      socket.disconnect();
+      Object.values(notifTimers.current).forEach(clearTimeout);
+    };
+  // eslint-disable-next-line
   }, []);
 
-  useEffect(() => { loadRooms(); const t = setInterval(loadRooms, 8000); return ()=>clearInterval(t); }, [loadRooms]);
-
-  async function createRoom(e) {
-    e.preventDefault(); setMsg('');
+  async function handleCreate(e) {
+    e.preventDefault();
+    setCreating(true);
     try {
-      const d = await fetch(`${API}/gd/rooms`, { method:'POST', headers:tk(), body:JSON.stringify({ ...form, company: form.company==='Any'?'':form.company }) }).then(r=>r.json());
-      if (d.room) nav(`/dashboard/gd/${d.room.roomCode}`);
-      else setMsg(d.error || 'Failed to create room');
-    } catch { setMsg('Network error'); }
+      const r = await fetch(`${API}/gd/rooms`, {
+        method:'POST', headers:tk(), body:JSON.stringify(form),
+      });
+      const d = await r.json();
+      if (d.room?.roomCode) nav(`/dashboard/gd/${d.room.roomCode}`);
+      else alert(d.error || 'Failed to create room');
+    } catch { alert('Network error'); }
+    setCreating(false);
   }
 
-  async function joinRoom(code) {
-    const c = (code || joinCode).toUpperCase().trim();
-    if (!c) { setMsg('Enter a room code'); return; }
-    const d = await fetch(`${API}/gd/rooms/${c}`, { headers:tk() }).then(r=>r.json());
-    if (d.room) nav(`/dashboard/gd/${c}`);
-    else setMsg('Room not found or no longer available');
+  function handleJoinCode(e) {
+    e.preventDefault();
+    const code = joinCode.trim().toUpperCase();
+    if (code.length >= 6) nav(`/dashboard/gd/${code}`);
+    else alert('Enter a valid room code');
   }
 
-  const INP = { style:{ width:'100%', padding:'9px 12px', borderRadius:8, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.875rem', outline:'none', background:'#fafbff', boxSizing:'border-box' } };
-  const LBL = s => <label style={{ display:'block', fontSize:'.73rem', fontWeight:700, color:'#3d4e6b', marginBottom:4, fontFamily:"'Syne',sans-serif" }}>{s}</label>;
-  const stateColor = { waiting:'#47d372', locked:'#ef4444', active:'#f59e0b', completed:'#b0bec9' };
+  const diffColor = { Easy:'#47d372', Medium:'#f59e0b', Hard:'#ef4444' };
 
   return (
-    <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:1100, margin:'0 auto', padding:'0 4px' }}>
-      {/* Header */}
-      <div style={{ background:GRAD, borderRadius:16, padding:'24px 28px', marginBottom:20, color:'#fff' }}>
-        <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', marginBottom:6 }}>🎤 Group Discussion — Placement Round</div>
-        <p style={{ color:'rgba(255,255,255,.8)', fontSize:'.88rem', margin:0 }}>
-          Simulate real company GD rounds. AI moderator • Live analytics • Placement score
-        </p>
-        <div style={{ display:'flex', gap:16, marginTop:14, flexWrap:'wrap' }}>
-          {[['🔒','Room locks at min participants'],['🤖','AI participants fill empty slots'],['📊','Individual AI evaluation report'],['🌐','English / Hindi / Hinglish']].map(([ic,t])=>(
-            <div key={t} style={{ display:'flex', alignItems:'center', gap:6, fontSize:'.78rem', color:'rgba(255,255,255,.85)' }}>
-              <span>{ic}</span><span>{t}</span>
+    <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:960, margin:'0 auto', padding:'0 8px 60px' }}>
+
+      {/* Toast Notifications */}
+      <div style={{ position:'fixed', top:20, right:20, zIndex:9999, display:'flex', flexDirection:'column', gap:10 }}>
+        {notifications.map(n => (
+          <div key={n.id} style={{ background:'#fff', borderRadius:12, padding:'14px 18px', boxShadow:'0 8px 32px rgba(83,22,151,0.18)', border:'1.5px solid rgba(83,22,151,0.15)', maxWidth:320, animation:'slideIn .3s ease' }}>
+            <div style={{ fontWeight:800, fontSize:'.85rem', color:'#531697', marginBottom:4 }}>🎤 New GD Session</div>
+            <div style={{ fontSize:'.78rem', color:'#3d4e6b', marginBottom:8 }}>{n.message}</div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => nav(`/dashboard/gd/${n.roomCode}`)}
+                style={{ flex:1, padding:'6px', borderRadius:8, border:'none', background:GRAD, color:'#fff', fontWeight:800, cursor:'pointer', fontSize:'.75rem', fontFamily:"'Nunito',sans-serif" }}>
+                Join Now →
+              </button>
+              <button onClick={() => setNotifications(x => x.filter(i => i.id !== n.id))}
+                style={{ padding:'6px 10px', borderRadius:8, border:'1px solid #e8edf5', background:'transparent', cursor:'pointer', fontSize:'.8rem', color:'#b0bec9' }}>✕</button>
             </div>
+          </div>
+        ))}
+      </div>
+      <style>{`@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+
+      {/* Header */}
+      <div style={{ background:GRAD, borderRadius:16, padding:'28px 32px', marginBottom:20, color:'#fff' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:12 }}>
+          <div>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.5rem', marginBottom:4 }}>🎤 Group Discussion Arena</div>
+            <div style={{ opacity:.85, fontSize:'.88rem', lineHeight:1.5 }}>AI-powered video GD with real-time moderation, voice interaction & detailed evaluation</div>
+          </div>
+          <button onClick={() => setShowCreate(s => !s)}
+            style={{ padding:'12px 24px', borderRadius:12, border:'2px solid rgba(255,255,255,0.4)', background:'rgba(255,255,255,0.15)', color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.95rem' }}>
+            {showCreate ? '✕ Cancel' : '+ Create Room'}
+          </button>
+        </div>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:16 }}>
+          {['🤖 Groq AI Moderator','📹 Live Video','🎙️ Voice-First','📊 AI Evaluation','🔴 Real-time Monitoring'].map(f => (
+            <span key={f} style={{ padding:'4px 12px', borderRadius:20, background:'rgba(255,255,255,0.18)', fontSize:'.72rem', fontWeight:700 }}>{f}</span>
           ))}
         </div>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1.4fr', gap:14 }}>
-        {/* LEFT — Create + Join */}
-        <div>
-          {/* Quick Join */}
-          <div className="card" style={{ padding:'18px 20px', marginBottom:12 }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem', marginBottom:12 }}>🔑 Join with Code</div>
-            <div style={{ display:'flex', gap:8 }}>
-              <input value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())}
-                placeholder="Enter room code…" maxLength={8}
-                style={{ flex:1, padding:'10px 14px', borderRadius:9, border:'1.5px solid #d0d7e8', fontFamily:'monospace', fontSize:'1rem', outline:'none', letterSpacing:'0.1em', textTransform:'uppercase' }} />
-              <button onClick={()=>joinRoom()} style={{ padding:'10px 18px', borderRadius:9, border:'none', background:GRAD, color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>Join →</button>
+      {/* Create Room Form */}
+      {showCreate && (
+        <div style={{ background:'#fff', borderRadius:16, padding:'24px 28px', marginBottom:20, boxShadow:'0 4px 24px rgba(83,22,151,0.1)', border:'1.5px solid rgba(83,22,151,0.12)' }}>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.05rem', marginBottom:18, color:'#0f1a2e' }}>Configure New GD Room</div>
+          <form onSubmit={handleCreate}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:14, marginBottom:18 }}>
+              <FormField label="Company Context">
+                <select value={form.company} onChange={e => setForm(f => ({ ...f, company:e.target.value }))} style={selectStyle}>
+                  {['TCS','Infosys','Wipro','Cognizant','Capgemini','Accenture','HCL','Tech Mahindra','General'].map(c => <option key={c}>{c}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Difficulty">
+                <select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty:e.target.value }))} style={selectStyle}>
+                  {['Easy','Medium','Hard'].map(d => <option key={d}>{d}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Language">
+                <select value={form.language} onChange={e => setForm(f => ({ ...f, language:e.target.value }))} style={selectStyle}>
+                  {['English','Hindi','Hinglish'].map(l => <option key={l}>{l}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Min Participants">
+                <input type="number" min={2} max={6} value={form.minParticipants}
+                  onChange={e => setForm(f => ({ ...f, minParticipants:+e.target.value }))} style={inputStyle} />
+              </FormField>
+              <FormField label="Max Participants">
+                <input type="number" min={2} max={8} value={form.maxParticipants}
+                  onChange={e => setForm(f => ({ ...f, maxParticipants:+e.target.value }))} style={inputStyle} />
+              </FormField>
+              <FormField label="Duration">
+                <select value={form.durationSeconds} onChange={e => setForm(f => ({ ...f, durationSeconds:+e.target.value }))} style={selectStyle}>
+                  {[[300,'5 min'],[600,'10 min'],[900,'15 min'],[1200,'20 min']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </FormField>
             </div>
-          </div>
-
-          {/* Create Room */}
-          <div className="card" style={{ padding:'18px 20px' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem' }}>➕ Create New Room</div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18 }}>
+              <input type="checkbox" id="priv" checked={form.isPrivate} onChange={e => setForm(f => ({ ...f, isPrivate:e.target.checked }))} />
+              <label htmlFor="priv" style={{ fontSize:'.85rem', color:'#3d4e6b', fontWeight:700, cursor:'pointer' }}>🔒 Private room (invite only)</label>
             </div>
-            <form onSubmit={createRoom}>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
-                <div>
-                  {LBL('Company Context')}
-                  <select {...INP} value={form.company} onChange={e=>setForm(f=>({...f,company:e.target.value}))}>
-                    {COMPANIES.map(c=><option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  {LBL('Difficulty')}
-                  <select {...INP} value={form.difficulty} onChange={e=>setForm(f=>({...f,difficulty:e.target.value}))}>
-                    {['Easy','Medium','Hard'].map(d=><option key={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div>
-                  {LBL(`Min Participants (${form.minParticipants})`)}
-                  <input type="range" min={2} max={8} value={form.minParticipants}
-                    onChange={e=>setForm(f=>({...f,minParticipants:+e.target.value, maxParticipants:Math.max(+e.target.value,f.maxParticipants)}))}
-                    style={{ width:'100%', accentColor:'#531697' }} />
-                </div>
-                <div>
-                  {LBL(`Max Participants (${form.maxParticipants})`)}
-                  <input type="range" min={form.minParticipants} max={8} value={form.maxParticipants}
-                    onChange={e=>setForm(f=>({...f,maxParticipants:+e.target.value}))}
-                    style={{ width:'100%', accentColor:'#13a1a5' }} />
-                </div>
-                <div>
-                  {LBL(`Duration (${form.durationSeconds/60} min)`)}
-                  <input type="range" min={180} max={1200} step={60} value={form.durationSeconds}
-                    onChange={e=>setForm(f=>({...f,durationSeconds:+e.target.value}))}
-                    style={{ width:'100%', accentColor:'#531697' }} />
-                </div>
-                <div>
-                  {LBL('Language')}
-                  <select {...INP} value={form.language} onChange={e=>setForm(f=>({...f,language:e.target.value}))}>
-                    {['English','Hindi','Hinglish'].map(l=><option key={l}>{l}</option>)}
-                  </select>
-                </div>
-              </div>
-              <label style={{ display:'flex', alignItems:'center', gap:8, fontSize:'.8rem', fontWeight:700, color:'#3d4e6b', marginBottom:12, cursor:'pointer' }}>
-                <input type="checkbox" checked={form.isPrivate} onChange={e=>setForm(f=>({...f,isPrivate:e.target.checked}))} style={{ accentColor:'#531697' }} />
-                Private Room (invite-only)
-              </label>
-              {msg && <div style={{ marginBottom:10, padding:'8px 12px', borderRadius:8, fontSize:'.82rem', fontWeight:600, background:msg.includes('✅')?'#dcfce7':'#fee2e2', color:msg.includes('✅')?'#166534':'#991b1b' }}>{msg}</div>}
-              <button type="submit" style={{ width:'100%', padding:'11px', borderRadius:10, border:'none', background:GRAD, color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.9rem' }}>
-                🎤 Create & Host Room
-              </button>
-            </form>
-          </div>
+            <button type="submit" disabled={creating}
+              style={{ padding:'12px 32px', borderRadius:12, border:'none', background:GRAD, color:'#fff', fontWeight:800, cursor:creating?'wait':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.95rem' }}>
+              {creating ? '⏳ Creating…' : '🚀 Create & Enter Room'}
+            </button>
+          </form>
         </div>
+      )}
 
-        {/* RIGHT — Open Rooms */}
-        <div className="card" style={{ padding:'18px 20px' }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.95rem' }}>🌐 Live Rooms</div>
-            <button onClick={loadRooms} style={{ padding:'5px 12px', borderRadius:8, border:'1px solid #d0d7e8', background:'transparent', color:'#531697', fontWeight:700, fontSize:'.75rem', cursor:'pointer' }}>↻ Refresh</button>
-          </div>
-          {loading && <div style={{ textAlign:'center', padding:20, color:'#b0bec9' }}>Loading rooms…</div>}
-          {!loading && rooms.length === 0 && (
-            <div style={{ textAlign:'center', padding:'30px 0', color:'#b0bec9' }}>
-              <div style={{ fontSize:'2rem', marginBottom:8 }}>🎤</div>
-              <div style={{ fontSize:'.85rem' }}>No open rooms. Create one and invite classmates!</div>
-            </div>
-          )}
-          {rooms.map(r => {
-            const count = r.participants?.length || 0;
-            const sc    = stateColor[r.state] || '#531697';
+      {/* Join by Code */}
+      <div style={{ background:'#fff', borderRadius:14, padding:'18px 22px', marginBottom:20, boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #e8edf5' }}>
+        <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'.9rem', marginBottom:12, color:'#0f1a2e' }}>🔑 Join with Room Code</div>
+        <form onSubmit={handleJoinCode} style={{ display:'flex', gap:10 }}>
+          <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())}
+            placeholder="e.g. A1B2C3D4" maxLength={10}
+            style={{ flex:1, padding:'10px 14px', borderRadius:10, border:'1.5px solid #d0d7e8', fontFamily:"'Nunito',sans-serif", fontSize:'.9rem', fontWeight:700, letterSpacing:'0.1em', outline:'none' }} />
+          <button type="submit"
+            style={{ padding:'10px 22px', borderRadius:10, border:'none', background:GRAD, color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>
+            Join →
+          </button>
+        </form>
+      </div>
+
+      {/* Live Rooms */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1.05rem', color:'#0f1a2e' }}>
+          🔴 Live Sessions
+          {rooms.length > 0 && <span style={{ marginLeft:8, background:'#ef4444', color:'#fff', borderRadius:20, padding:'2px 10px', fontSize:'.72rem', fontWeight:800 }}>{rooms.length}</span>}
+        </div>
+        <button onClick={fetchRooms} style={{ padding:'7px 16px', borderRadius:8, border:'1px solid #e8edf5', background:'transparent', color:'#7a8ba8', fontWeight:700, cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.78rem' }}>↻ Refresh</button>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign:'center', padding:'40px 0', color:'#b0bec9' }}>Loading sessions…</div>
+      ) : rooms.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'50px 20px', background:'#fff', borderRadius:14, border:'1px dashed #d0d7e8' }}>
+          <div style={{ fontSize:'2.5rem', marginBottom:12 }}>🎤</div>
+          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1rem', color:'#0f1a2e', marginBottom:8 }}>No sessions open right now</div>
+          <div style={{ color:'#7a8ba8', fontSize:'.85rem', marginBottom:20 }}>Create a room — others will be notified instantly</div>
+          <button onClick={() => setShowCreate(true)} style={{ padding:'10px 24px', borderRadius:10, border:'none', background:GRAD, color:'#fff', fontWeight:800, cursor:'pointer', fontFamily:"'Nunito',sans-serif" }}>Create Room</button>
+        </div>
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
+          {rooms.map(room => {
+            const count  = room.participants?.filter(p => !p?.isAI).length || 0;
+            const pct    = Math.round((count / room.maxParticipants) * 100);
+            const bColor = pct >= 100 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#47d372';
+            const isFull = count >= room.maxParticipants;
             return (
-              <div key={r.roomCode} style={{ padding:'12px 14px', borderRadius:10, border:'1px solid #e8edf5', marginBottom:8, background:'#fafbff' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
-                  <div style={{ fontFamily:'monospace', fontWeight:800, fontSize:'1rem', color:'#531697', background:'rgba(83,22,151,0.08)', padding:'3px 10px', borderRadius:6 }}>{r.roomCode}</div>
-                  <div style={{ flex:1 }}>
-                    <span style={{ fontWeight:700, fontSize:'.82rem', color:'#0f1a2e' }}>{r.companyContext || 'General'}</span>
-                    <span style={{ marginLeft:8, fontSize:'.72rem', color:'#7a8ba8' }}>{r.language} · {r.difficulty}</span>
+              <div key={room.roomCode} style={{ background:'#fff', borderRadius:14, padding:'18px 20px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)', border:'1px solid #e8edf5', display:'flex', flexDirection:'column', gap:10 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                  <div style={{ fontFamily:'monospace', fontWeight:800, fontSize:'.9rem', color:'#531697', background:'rgba(83,22,151,0.08)', padding:'3px 10px', borderRadius:6 }}>{room.roomCode}</div>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <span style={{ padding:'2px 9px', borderRadius:10, background:`${diffColor[room.difficulty]||'#9ab0c8'}18`, color:diffColor[room.difficulty]||'#9ab0c8', fontWeight:800, fontSize:'.68rem' }}>{room.difficulty}</span>
+                    {room.isPrivate && <span style={{ padding:'2px 9px', borderRadius:10, background:'#f0f3fa', color:'#7a8ba8', fontWeight:700, fontSize:'.68rem' }}>🔒</span>}
                   </div>
-                  <span style={{ padding:'2px 8px', borderRadius:999, background:`${sc}15`, color:sc, fontSize:'.68rem', fontWeight:700 }}>{r.state}</span>
                 </div>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                  <div style={{ fontSize:'.75rem', color:'#7a8ba8' }}>
-                    👥 {count}/{r.maxParticipants} · needs {r.minParticipants} to start
-                    <div style={{ marginTop:4, height:5, background:'#f0f3fa', borderRadius:999, width:120 }}>
-                      <div style={{ height:'100%', width:`${(count/r.maxParticipants)*100}%`, background:GRAD, borderRadius:999 }} />
-                    </div>
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  {[['🏢',room.companyContext||'General'],['⏱',`${Math.round(room.durationSeconds/60)} min`],['🌐',room.language||'English']].map(([ic,txt]) => (
+                    <span key={txt} style={{ fontSize:'.75rem', fontWeight:700, color:'#3d4e6b', background:'#f8faff', padding:'3px 9px', borderRadius:6 }}>{ic} {txt}</span>
+                  ))}
+                </div>
+                <div>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                    <span style={{ fontSize:'.72rem', fontWeight:700, color:'#7a8ba8' }}>Participants</span>
+                    <span style={{ fontSize:'.72rem', fontWeight:800, color:bColor }}>{count}/{room.maxParticipants}</span>
                   </div>
-                  {r.state === 'waiting' && count < r.maxParticipants
-                    ? <button onClick={()=>joinRoom(r.roomCode)} style={{ padding:'6px 16px', borderRadius:8, border:'none', background:GRAD, color:'#fff', fontWeight:800, cursor:'pointer', fontSize:'.78rem' }}>Join →</button>
-                    : <span style={{ fontSize:'.72rem', color:'#b0bec9', fontWeight:600 }}>Locked</span>
-                  }
+                  <div style={{ height:5, borderRadius:4, background:'#f0f3fa', overflow:'hidden' }}>
+                    <div style={{ height:'100%', borderRadius:4, background:bColor, width:`${pct}%`, transition:'width .4s' }} />
+                  </div>
+                  <div style={{ fontSize:'.68rem', color:'#b0bec9', marginTop:3 }}>Minimum: {room.minParticipants}</div>
                 </div>
+                <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                  {['🤖 AI Moderator','📊 Evaluation','🎙️ Voice'].map(tag => (
+                    <span key={tag} style={{ padding:'2px 8px', borderRadius:6, background:'rgba(83,22,151,0.06)', color:'#531697', fontSize:'.62rem', fontWeight:700 }}>{tag}</span>
+                  ))}
+                </div>
+                <button onClick={() => !isFull && nav(`/dashboard/gd/${room.roomCode}`)}
+                  disabled={isFull}
+                  style={{ padding:'10px', borderRadius:10, border:'none', background:isFull?'#f0f3fa':GRAD, color:isFull?'#b0bec9':'#fff', fontWeight:800, cursor:isFull?'not-allowed':'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'.88rem' }}>
+                  {isFull ? 'Full' : '▶ Join Session'}
+                </button>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* How it works */}
+      <div style={{ marginTop:32, background:'#fff', borderRadius:16, padding:'24px 28px', border:'1px solid #e8edf5' }}>
+        <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:'1rem', marginBottom:18, color:'#0f1a2e' }}>🤖 How AI-Powered GD Works</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:14 }}>
+          {[
+            ['1️⃣','Enable Camera & Mic','Google Meet-style permission with live preview before joining'],
+            ['2️⃣','Prep Time','AI announces the topic with voice. 45 seconds to prepare.'],
+            ['3️⃣','Live Video GD','Active speaker detection. Hold mic button to speak & be transcribed.'],
+            ['4️⃣','AI Monitoring','Off-topic? AI voice intervenes and brings discussion back on track.'],
+            ['5️⃣','AI Auto-Joins','If not enough participants in 2 min, AI fills in as participant.'],
+            ['6️⃣','Instant Report','7-dimension AI evaluation report generated per student after GD.'],
+          ].map(([n, title, desc]) => (
+            <div key={n} style={{ padding:'14px', borderRadius:10, background:'#f8faff', border:'1px solid #e8edf5' }}>
+              <div style={{ fontSize:'1.3rem', marginBottom:6 }}>{n}</div>
+              <div style={{ fontWeight:800, fontSize:'.82rem', color:'#0f1a2e', marginBottom:4 }}>{title}</div>
+              <div style={{ fontSize:'.75rem', color:'#7a8ba8', lineHeight:1.5 }}>{desc}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,22 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
 
 const API = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const tk  = () => ({ Authorization: `Bearer ${localStorage.getItem('pragati_token')}` });
 
 const NAV_STUDENT = [
-  { to:'/dashboard',              icon:'🏠', label:'Dashboard' },
-  { to:'/dashboard/notes',        icon:'📚', label:'Notes' },
-  { to:'/dashboard/problems',     icon:'💻', label:'Daily Practice' },
-  { to:'/dashboard/aptitude',     icon:'🎯', label:'Aptitude' },
+  { to:'/dashboard',               icon:'🏠', label:'Dashboard' },
+  { to:'/dashboard/notes',         icon:'📚', label:'Notes' },
+  { to:'/dashboard/problems',      icon:'💻', label:'Daily Practice' },
+  { to:'/dashboard/aptitude',      icon:'🎯', label:'Aptitude' },
   { to:'/dashboard/interview-prep',icon:'🏅', label:'Interview Prep' },
-  { to:'/dashboard/companies',    icon:'🏢', label:'Companies' },
-  { to:'/dashboard/drives',       icon:'🗓️', label:'Placement Drives' },
-  { to:'/dashboard/skillpath',    icon:'🧠', label:'SkillPath AI' },
+  { to:'/dashboard/companies',     icon:'🏢', label:'Companies' },
+  { to:'/dashboard/drives',        icon:'🗓️', label:'Placement Drives' },
+  { to:'/dashboard/skillpath',     icon:'🧠', label:'SkillPath AI' },
   { to:'/dashboard/gd',            icon:'🎤', label:'Group Discussion' },
-  { to:'/dashboard/discussions',  icon:'💬', label:'Discussions' },
+  { to:'/dashboard/discussions',   icon:'💬', label:'Discussions' },
 ];
 const NAV_FACULTY = [
   { to:'/dashboard',                  icon:'🏠', label:'Dashboard' },
@@ -26,23 +25,28 @@ const NAV_FACULTY = [
   { to:'/dashboard/drives',           icon:'🗓️', label:'Placement Drives' },
   { to:'/dashboard/companies',        icon:'🏢', label:'Companies' },
   { to:'/dashboard/notes',            icon:'📚', label:'Notes' },
-  { to:'/dashboard/gd',                  icon:'🎤', label:'Group Discussion' },
+  { to:'/dashboard/gd',               icon:'🎤', label:'Group Discussion' },
   { to:'/dashboard/discussions',      icon:'💬', label:'Discussions' },
 ];
 const NAV_ADMIN = [
-  { to:'/dashboard',              icon:'📊', label:'Overview' },
-  { to:'/dashboard/admin',        icon:'⚙️', label:'Admin Panel' },
-  { to:'/dashboard/notes',        icon:'📚', label:'Notes' },
-  { to:'/dashboard/companies',    icon:'🏢', label:'Companies' },
-  { to:'/dashboard/drives',       icon:'🗓️', label:'Placement Drives' },
+  { to:'/dashboard',          icon:'📊', label:'Overview' },
+  { to:'/dashboard/admin',    icon:'⚙️', label:'Admin Panel' },
+  { to:'/dashboard/notes',    icon:'📚', label:'Notes' },
+  { to:'/dashboard/companies',icon:'🏢', label:'Companies' },
+  { to:'/dashboard/drives',   icon:'🗓️', label:'Placement Drives' },
 ];
 
 export default function DashboardLayout() {
   const notifRef = useRef(null);
   const { user, setUser, logout } = useAuth();
-  const nav = useNavigate();
-  const [open, setOpen] = useState(true);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('pragati_dark') === '1');
+  const nav      = useNavigate();
+  const location = useLocation();                                          // ✅ hook at top level
+
+  // GD Room/Report pages need full-screen — no sidebar padding/maxWidth
+  const isGDRoom = /\/dashboard\/gd\/.+/.test(location.pathname);         // ✅ derived from hook
+
+  const [open, setOpen]             = useState(true);
+  const [darkMode, setDarkMode]     = useState(() => localStorage.getItem('pragati_dark') === '1');
   const [showNotif, setShowNotif]   = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   const [notifList, setNotifList]   = useState([]);
@@ -50,11 +54,11 @@ export default function DashboardLayout() {
   // Fetch announcements for bell icon
   React.useEffect(() => {
     const lastSeen = parseInt(localStorage.getItem('pragati_notif_seen') || '0');
-    const base = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const base  = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
     const token = localStorage.getItem('pragati_token');
     Promise.all([
       fetch(`${base}/announcements`, { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).catch(()=>({announcements:[]})),
-      fetch(`${base}/drives`, { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).catch(()=>({drives:[]})),
+      fetch(`${base}/drives`,        { headers: { Authorization: `Bearer ${token}` } }).then(r=>r.json()).catch(()=>({drives:[]})),
     ]).then(([annData, driveData]) => {
       const anns   = annData.announcements || [];
       const drives = (driveData.drives || []).map(d => ({
@@ -68,7 +72,8 @@ export default function DashboardLayout() {
       setNotifCount(unseen.length);
     });
   }, []);
-  const [showEditProfile, setShowEditProfile] = useState(false);
+
+  const [showEditProfile,   setShowEditProfile]   = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [dropOpen, setDropOpen] = useState(false);
   const dropRef = useRef();
@@ -86,9 +91,7 @@ export default function DashboardLayout() {
   }
 
   async function handleDeleteAccount() {
-    try {
-      await fetch(`${API}/users/profile`, { method:'DELETE', headers:tk() });
-    } catch {}
+    try { await fetch(`${API}/users/profile`, { method:'DELETE', headers:tk() }); } catch {}
     localStorage.removeItem('pragati_token');
     localStorage.removeItem('pragati_refresh');
     window.location.href = '/login';
@@ -100,34 +103,38 @@ export default function DashboardLayout() {
     return () => document.removeEventListener('mousedown', handle);
   }, []);
 
-  const roleColor = { student:'linear-gradient(135deg,#531697,#13a1a5)', faculty:'linear-gradient(135deg,#042c5d,#531697)', admin:'linear-gradient(135deg,#13a1a5,#47d372)' };
+  const roleColor = {
+    student: 'linear-gradient(135deg,#531697,#13a1a5)',
+    faculty: 'linear-gradient(135deg,#042c5d,#531697)',
+    admin:   'linear-gradient(135deg,#13a1a5,#47d372)',
+  };
   const roleLabel = { student:'Student', faculty:'Faculty', admin:'Administrator' };
 
-  const dm = darkMode;
-  const pageBg    = dm ? '#0f1623' : '#f4f6fb';
-  const sidebarBg = dm ? '#161d2e' : '#fff';
-  const sidebarBrd= dm ? '#1e2d42' : '#e8edf5';
-  const headerBg  = dm ? '#161d2e' : '#fff';
-  const headerBrd = dm ? '#1e2d42' : '#e8edf5';
-  const dropBg    = dm ? '#1a2235' : '#fff';
-  const dropBrd   = dm ? '#2d3a52' : '#e8edf5';
-  const txt       = dm ? '#e2e8f0' : '#0f1a2e';
-  const sub       = dm ? '#94a3b8' : '#7a8ba8';
-  const hover     = dm ? '#2d3748' : '#f8f9fc';
-  const inpBg     = dm ? '#2d3748' : '#fafbff';
-  const inpBrd    = dm ? '#334155' : '#d0d7e8';
+  const dm         = darkMode;
+  const pageBg     = dm ? '#0f1623' : '#f4f6fb';
+  const sidebarBg  = dm ? '#161d2e' : '#fff';
+  const sidebarBrd = dm ? '#1e2d42' : '#e8edf5';
+  const headerBg   = dm ? '#161d2e' : '#fff';
+  const headerBrd  = dm ? '#1e2d42' : '#e8edf5';
+  const dropBg     = dm ? '#1a2235' : '#fff';
+  const dropBrd    = dm ? '#2d3a52' : '#e8edf5';
+  const txt        = dm ? '#e2e8f0' : '#0f1a2e';
+  const sub        = dm ? '#94a3b8' : '#7a8ba8';
+  const hover      = dm ? '#2d3748' : '#f8f9fc';
+  const inpBg      = dm ? '#2d3748' : '#fafbff';
+  const inpBrd     = dm ? '#334155' : '#d0d7e8';
 
-  // --- Edit Profile Modal ---
+  // ── Edit Profile Modal ────────────────────────────────────────────────────
   function EditProfileModal() {
     const [form, setForm] = useState({
       name: user?.name||'', department: user?.department||'', year: user?.year||'',
       rollNumber: user?.rollNumber||'', phone: user?.phone||'', bio: user?.bio||'',
       linkedinUrl: user?.linkedinUrl||'', githubUrl: user?.githubUrl||'', portfolioUrl: user?.portfolioUrl||'',
     });
-    const [photoFile, setPhotoFile] = useState(null);
+    const [photoFile, setPhotoFile]     = useState(null);
     const [photoPreview, setPhotoPreview] = useState(user?.profilePhoto||null);
-    const [loading, setLoading] = useState(false);
-    const [msg, setMsg] = useState('');
+    const [loading, setLoading]         = useState(false);
+    const [msg, setMsg]                 = useState('');
     const fileRef = useRef();
 
     const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
@@ -199,7 +206,7 @@ export default function DashboardLayout() {
     );
   }
 
-  // --- Delete Confirm Modal ---
+  // ── Delete Confirm Modal ──────────────────────────────────────────────────
   function DeleteModal() {
     const [confirmText, setConfirmText] = useState('');
     return (
@@ -231,10 +238,10 @@ export default function DashboardLayout() {
         ${dm?`.card{background:#1a2235!important;border-color:#2d3a52!important;}body{background:#0f1623;color:#e2e8f0;}`:``}
       `}</style>
 
-      {showEditProfile && <EditProfileModal />}
+      {showEditProfile   && <EditProfileModal />}
       {showDeleteConfirm && <DeleteModal />}
 
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <aside style={{
         width: open ? 256 : 64, transition:'width .22s cubic-bezier(.4,0,.2,1)',
         background:sidebarBg, borderRight:`1px solid ${sidebarBrd}`,
@@ -251,7 +258,7 @@ export default function DashboardLayout() {
         </div>
 
         {open && user && (
-          <div style={{ margin:'12px 12px 0', padding:'10px 12px', borderRadius:10, background: roleColor[user.role]||roleColor.student, color:'#fff' }}>
+          <div style={{ margin:'12px 12px 0', padding:'10px 12px', borderRadius:10, background:roleColor[user.role]||roleColor.student, color:'#fff' }}>
             <div style={{ fontSize:'.72rem', opacity:.8, fontWeight:700, letterSpacing:'.05em' }}>SIGNED IN AS</div>
             <div style={{ fontWeight:800, fontSize:'.82rem', marginTop:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:170 }}>{user.name}</div>
             <div style={{ fontSize:'.72rem', opacity:.8 }}>{roleLabel[user.role]}</div>
@@ -277,141 +284,159 @@ export default function DashboardLayout() {
         </nav>
 
         <div style={{ padding:'10px 8px', borderTop:`1px solid ${sidebarBrd}` }}>
-          <button onClick={handleLogout} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', width:'100%', color:'#ef4444', fontSize:'.875rem', fontWeight:700, transition:'background .15s' }}
-            onMouseOver={e=>e.currentTarget.style.background='rgba(239,68,68,0.1)'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+          <button onClick={handleLogout}
+            style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:10, border:'none', background:'transparent', cursor:'pointer', width:'100%', color:'#ef4444', fontSize:'.875rem', fontWeight:700, transition:'background .15s' }}
+            onMouseOver={e=>e.currentTarget.style.background='rgba(239,68,68,0.1)'}
+            onMouseOut={e=>e.currentTarget.style.background='transparent'}>
             <span style={{ flexShrink:0 }}>🚪</span>
             {open && 'Sign Out'}
           </button>
         </div>
       </aside>
 
-      {/* ── Main ── */}
+      {/* ── Main area ───────────────────────────────────────────────────── */}
       <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0 }}>
-        <header style={{ height:58, background:headerBg, borderBottom:`1px solid ${headerBrd}`, display:'flex', alignItems:'center', padding:'0 24px', gap:12, position:'sticky', top:0, zIndex:10, boxShadow:'0 2px 8px rgba(4,44,93,0.05)' }}>
-          <button onClick={()=>setOpen(o=>!o)} style={{ background:'none', border:'none', fontSize:'1.2rem', cursor:'pointer', color:dm?'#94a3b8':'#7a8ba8', padding:4, borderRadius:6 }}>☰</button>
-          <div style={{ flex:1 }} />
 
-          {/* ── Bell Notification Icon ──────────────────────────────── */}
-          <div ref={notifRef} style={{ position:'relative' }}>
-            <button onClick={()=>setShowNotif(n=>!n)}
-              style={{ width:36, height:36, borderRadius:10, border:`1px solid ${headerBrd}`, background:dm?'rgba(255,255,255,0.06)':'rgba(4,44,93,0.04)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.1rem', position:'relative' }}
-              title="Notifications">
-              🔔
-              {notifCount>0&&<span style={{ position:'absolute', top:-4, right:-4, width:18, height:18, borderRadius:'50%', background:'#ef4444', color:'#fff', fontSize:'.6rem', fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #fff' }}>{notifCount>9?'9+':notifCount}</span>}
-            </button>
-            {showNotif&&(
-              <div style={{ position:'absolute', top:44, right:0, width:320, background:dm?'#1e2a3b':'#fff', border:`1px solid ${headerBrd}`, borderRadius:14, boxShadow:'0 8px 32px rgba(0,0,0,0.15)', zIndex:200, overflow:'hidden' }}>
-                <div style={{ padding:'12px 16px', borderBottom:`1px solid ${headerBrd}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ fontWeight:800, fontSize:'.88rem', color:dm?'#e2e8f0':'#0f1a2e', fontFamily:"'Syne',sans-serif" }}>🔔 Notifications</span>
-                  <button onClick={()=>{ setNotifCount(0); localStorage.setItem('pragati_notif_seen', Date.now()); setShowNotif(false); }}
-                    style={{ fontSize:'.65rem', color:'#531697', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>Mark all read</button>
+        {/* Header — hidden on GD room so the call gets full screen */}
+        {!isGDRoom && (
+          <header style={{ height:58, background:headerBg, borderBottom:`1px solid ${headerBrd}`, display:'flex', alignItems:'center', padding:'0 24px', gap:12, position:'sticky', top:0, zIndex:10, boxShadow:'0 2px 8px rgba(4,44,93,0.05)', flexShrink:0 }}>
+            <button onClick={()=>setOpen(o=>!o)} style={{ background:'none', border:'none', fontSize:'1.2rem', cursor:'pointer', color:dm?'#94a3b8':'#7a8ba8', padding:4, borderRadius:6 }}>☰</button>
+            <div style={{ flex:1 }} />
+
+            {/* Bell */}
+            <div ref={notifRef} style={{ position:'relative' }}>
+              <button onClick={()=>setShowNotif(n=>!n)}
+                style={{ width:36, height:36, borderRadius:10, border:`1px solid ${headerBrd}`, background:dm?'rgba(255,255,255,0.06)':'rgba(4,44,93,0.04)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.1rem', position:'relative' }}
+                title="Notifications">
+                🔔
+                {notifCount>0&&<span style={{ position:'absolute', top:-4, right:-4, width:18, height:18, borderRadius:'50%', background:'#ef4444', color:'#fff', fontSize:'.6rem', fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #fff' }}>{notifCount>9?'9+':notifCount}</span>}
+              </button>
+              {showNotif&&(
+                <div style={{ position:'absolute', top:44, right:0, width:320, background:dm?'#1e2a3b':'#fff', border:`1px solid ${headerBrd}`, borderRadius:14, boxShadow:'0 8px 32px rgba(0,0,0,0.15)', zIndex:200, overflow:'hidden' }}>
+                  <div style={{ padding:'12px 16px', borderBottom:`1px solid ${headerBrd}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ fontWeight:800, fontSize:'.88rem', color:dm?'#e2e8f0':'#0f1a2e', fontFamily:"'Syne',sans-serif" }}>🔔 Notifications</span>
+                    <button onClick={()=>{ setNotifCount(0); localStorage.setItem('pragati_notif_seen', Date.now()); setShowNotif(false); }}
+                      style={{ fontSize:'.65rem', color:'#531697', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>Mark all read</button>
+                  </div>
+                  <div style={{ maxHeight:300, overflowY:'auto' }}>
+                    {notifList.length>0 ? notifList.map((a,i)=>(
+                      <div key={i} style={{ padding:'10px 16px', borderBottom:`1px solid ${headerBrd}`, background:i===0&&notifCount>0?dm?'rgba(83,22,151,0.08)':'rgba(83,22,151,0.04)':'transparent' }}>
+                        <div style={{ fontWeight:700, fontSize:'.8rem', color:dm?'#e2e8f0':'#0f1a2e', marginBottom:2 }}>{a.title}</div>
+                        <div style={{ fontSize:'.73rem', color:dm?'#94a3b8':'#7a8ba8', lineHeight:1.5 }}>{a.message}</div>
+                        <div style={{ fontSize:'.65rem', color:dm?'#64748b':'#b0bec9', marginTop:3 }}>{new Date(a.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                      </div>
+                    )) : (
+                      <div style={{ padding:'24px 16px', textAlign:'center', color:dm?'#64748b':'#b0bec9', fontSize:'.82rem' }}>No notifications yet</div>
+                    )}
+                  </div>
                 </div>
-                <div style={{ maxHeight:300, overflowY:'auto' }}>
-                  {notifList.length>0 ? notifList.map((a,i)=>(
-                    <div key={i} style={{ padding:'10px 16px', borderBottom:`1px solid ${headerBrd}`, background:i===0&&notifCount>0?dm?'rgba(83,22,151,0.08)':'rgba(83,22,151,0.04)':'transparent' }}>
-                      <div style={{ fontWeight:700, fontSize:'.8rem', color:dm?'#e2e8f0':'#0f1a2e', marginBottom:2 }}>{a.title}</div>
-                      <div style={{ fontSize:'.73rem', color:dm?'#94a3b8':'#7a8ba8', lineHeight:1.5 }}>{a.message}</div>
-                      <div style={{ fontSize:'.65rem', color:dm?'#64748b':'#b0bec9', marginTop:3 }}>{new Date(a.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
-                    </div>
-                  )) : (
-                    <div style={{ padding:'24px 16px', textAlign:'center', color:dm?'#64748b':'#b0bec9', fontSize:'.82rem' }}>No notifications yet</div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Dark mode toggle */}
-          <button onClick={toggleDark} title={dm?'Light Mode':'Dark Mode'}
-            style={{ background:dm?'rgba(255,255,255,0.08)':'rgba(4,44,93,0.06)', border:`1px solid ${headerBrd}`, borderRadius:8, padding:'5px 10px', cursor:'pointer', fontSize:'.85rem', display:'flex', alignItems:'center', gap:5 }}>
-            <span>{dm?'☀️':'🌙'}</span>
-            <span style={{ fontSize:'.72rem', fontWeight:700, color:dm?'#f8d76b':'#531697' }}>{dm?'Light':'Dark'}</span>
-          </button>
-
-          {user?.role === 'student' && (
-            <div style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,rgba(245,158,11,0.1),rgba(71,211,114,0.1))', padding:'5px 14px', borderRadius:999, border:'1px solid rgba(245,158,11,0.2)' }}>
-              <span style={{ animation:'pulse 1.5s ease-in-out infinite', display:'inline-block' }}>🔥</span>
-              <span style={{ fontSize:'.82rem', fontWeight:800, color:'#d97706' }}>{user.streak || 0}</span>
-              <span style={{ fontSize:'.72rem', color:'#92400e', fontWeight:600 }}>day streak</span>
+              )}
             </div>
-          )}
 
-          {/* ── Profile Dropdown ── */}
-          <div ref={dropRef} style={{ position:'relative' }}>
-            <button onClick={()=>setDropOpen(o=>!o)} style={{
-              width:38, height:38, borderRadius:'50%',
-              background: user?.profilePhoto?'transparent':(roleColor[user?.role]||roleColor.student),
-              display:'flex', alignItems:'center', justifyContent:'center',
-              border: dropOpen ? '2.5px solid #531697' : `2px solid ${headerBrd}`,
-              cursor:'pointer', boxShadow:'0 2px 10px rgba(83,22,151,0.2)',
-              overflow:'hidden', padding:0, transition:'border .15s',
-            }}>
-              {user?.profilePhoto
-                ? <img src={user.profilePhoto} alt="av" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                : <span style={{ color:'#fff', fontWeight:800, fontSize:'.95rem' }}>{user?.name?.[0]?.toUpperCase()}</span>
-              }
+            {/* Dark mode */}
+            <button onClick={toggleDark} title={dm?'Light Mode':'Dark Mode'}
+              style={{ background:dm?'rgba(255,255,255,0.08)':'rgba(4,44,93,0.06)', border:`1px solid ${headerBrd}`, borderRadius:8, padding:'5px 10px', cursor:'pointer', fontSize:'.85rem', display:'flex', alignItems:'center', gap:5 }}>
+              <span>{dm?'☀️':'🌙'}</span>
+              <span style={{ fontSize:'.72rem', fontWeight:700, color:dm?'#f8d76b':'#531697' }}>{dm?'Light':'Dark'}</span>
             </button>
 
-            {dropOpen && (
-              <div style={{ position:'absolute', top:'calc(100% + 10px)', right:0, width:248, background:dropBg, borderRadius:14, boxShadow:'0 8px 40px rgba(4,44,93,0.18)', border:`1px solid ${dropBrd}`, zIndex:1000, overflow:'hidden' }}>
-                {/* User summary */}
-                <div style={{ padding:'13px 16px', borderBottom:`1px solid ${dropBrd}`, display:'flex', gap:10, alignItems:'center' }}>
-                  <div style={{ width:40, height:40, borderRadius:'50%', background:roleColor[user?.role]||roleColor.student, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.95rem', color:'#fff', fontWeight:800, overflow:'hidden', flexShrink:0 }}>
-                    {user?.profilePhoto ? <img src={user.profilePhoto} alt="av" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : user?.name?.[0]?.toUpperCase()}
-                  </div>
-                  <div style={{ minWidth:0 }}>
-                    <div style={{ fontWeight:800, fontSize:'.85rem', color:txt, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.name}</div>
-                    <div style={{ fontSize:'.68rem', color:sub, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.email}</div>
-                    {user?.department && <div style={{ fontSize:'.65rem', color:sub }}>{user.department}{user.year?` · Year ${user.year}`:''}{user.rollNumber?` · ${user.rollNumber}`:''}</div>}
-                  </div>
-                </div>
-
-                {/* Edit Profile */}
-                <button onClick={()=>{setShowEditProfile(true);setDropOpen(false);}} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
-                  onMouseOver={e=>e.currentTarget.style.background=hover} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
-                  <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>✏️</span>
-                  <span style={{ fontSize:'.83rem', fontWeight:600, color:txt }}>Edit Profile</span>
-                </button>
-
-                {/* Change Photo */}
-                <button onClick={()=>{setShowEditProfile(true);setDropOpen(false);}} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
-                  onMouseOver={e=>e.currentTarget.style.background=hover} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
-                  <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>📷</span>
-                  <span style={{ fontSize:'.83rem', fontWeight:600, color:txt }}>Upload Photo</span>
-                </button>
-
-                {/* Dark mode toggle */}
-                <button onClick={()=>{toggleDark();}} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
-                  onMouseOver={e=>e.currentTarget.style.background=hover} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
-                  <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>{dm?'☀️':'🌙'}</span>
-                  <span style={{ flex:1, fontSize:'.83rem', fontWeight:600, color:txt }}>{dm?'Light Mode':'Dark Mode'}</span>
-                  <div style={{ width:34, height:18, borderRadius:999, background:dm?'#531697':'#d0d7e8', position:'relative', flexShrink:0 }}>
-                    <div style={{ position:'absolute', top:2, left:dm?18:2, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }} />
-                  </div>
-                </button>
-
-                <div style={{ borderTop:`1px solid ${dropBrd}` }}>
-                  {/* Delete account */}
-                  <button onClick={()=>{setShowDeleteConfirm(true);setDropOpen(false);}} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
-                    onMouseOver={e=>e.currentTarget.style.background='rgba(239,68,68,0.07)'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
-                    <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>🗑️</span>
-                    <span style={{ fontSize:'.83rem', fontWeight:600, color:'#ef4444' }}>Delete Account</span>
-                  </button>
-                  {/* Sign out */}
-                  <button onClick={handleLogout} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
-                    onMouseOver={e=>e.currentTarget.style.background='rgba(239,68,68,0.07)'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
-                    <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>🚪</span>
-                    <span style={{ fontSize:'.83rem', fontWeight:600, color:'#ef4444' }}>Sign Out</span>
-                  </button>
-                </div>
+            {/* Streak */}
+            {user?.role === 'student' && (
+              <div style={{ display:'flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,rgba(245,158,11,0.1),rgba(71,211,114,0.1))', padding:'5px 14px', borderRadius:999, border:'1px solid rgba(245,158,11,0.2)' }}>
+                <span style={{ animation:'pulse 1.5s ease-in-out infinite', display:'inline-block' }}>🔥</span>
+                <span style={{ fontSize:'.82rem', fontWeight:800, color:'#d97706' }}>{user.streak || 0}</span>
+                <span style={{ fontSize:'.72rem', color:'#92400e', fontWeight:600 }}>day streak</span>
               </div>
             )}
-          </div>
-        </header>
 
-        <main style={{ flex:1, padding:'28px 28px', overflowY:'auto', maxWidth:1200, width:'100%' }}>
+            {/* Profile dropdown */}
+            <div ref={dropRef} style={{ position:'relative' }}>
+              <button onClick={()=>setDropOpen(o=>!o)} style={{
+                width:38, height:38, borderRadius:'50%',
+                background: user?.profilePhoto?'transparent':(roleColor[user?.role]||roleColor.student),
+                display:'flex', alignItems:'center', justifyContent:'center',
+                border: dropOpen ? '2.5px solid #531697' : `2px solid ${headerBrd}`,
+                cursor:'pointer', boxShadow:'0 2px 10px rgba(83,22,151,0.2)',
+                overflow:'hidden', padding:0, transition:'border .15s',
+              }}>
+                {user?.profilePhoto
+                  ? <img src={user.profilePhoto} alt="av" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  : <span style={{ color:'#fff', fontWeight:800, fontSize:'.95rem' }}>{user?.name?.[0]?.toUpperCase()}</span>
+                }
+              </button>
+
+              {dropOpen && (
+                <div style={{ position:'absolute', top:'calc(100% + 10px)', right:0, width:248, background:dropBg, borderRadius:14, boxShadow:'0 8px 40px rgba(4,44,93,0.18)', border:`1px solid ${dropBrd}`, zIndex:1000, overflow:'hidden' }}>
+                  <div style={{ padding:'13px 16px', borderBottom:`1px solid ${dropBrd}`, display:'flex', gap:10, alignItems:'center' }}>
+                    <div style={{ width:40, height:40, borderRadius:'50%', background:roleColor[user?.role]||roleColor.student, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.95rem', color:'#fff', fontWeight:800, overflow:'hidden', flexShrink:0 }}>
+                      {user?.profilePhoto ? <img src={user.profilePhoto} alt="av" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : user?.name?.[0]?.toUpperCase()}
+                    </div>
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontWeight:800, fontSize:'.85rem', color:txt, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.name}</div>
+                      <div style={{ fontSize:'.68rem', color:sub, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.email}</div>
+                      {user?.department && <div style={{ fontSize:'.65rem', color:sub }}>{user.department}{user.year?` · Year ${user.year}`:''}{user.rollNumber?` · ${user.rollNumber}`:''}</div>}
+                    </div>
+                  </div>
+
+                  <button onClick={()=>{setShowEditProfile(true);setDropOpen(false);}}
+                    style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
+                    onMouseOver={e=>e.currentTarget.style.background=hover} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                    <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>✏️</span>
+                    <span style={{ fontSize:'.83rem', fontWeight:600, color:txt }}>Edit Profile</span>
+                  </button>
+
+                  <button onClick={()=>{setShowEditProfile(true);setDropOpen(false);}}
+                    style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
+                    onMouseOver={e=>e.currentTarget.style.background=hover} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                    <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>📷</span>
+                    <span style={{ fontSize:'.83rem', fontWeight:600, color:txt }}>Upload Photo</span>
+                  </button>
+
+                  <button onClick={toggleDark}
+                    style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
+                    onMouseOver={e=>e.currentTarget.style.background=hover} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                    <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>{dm?'☀️':'🌙'}</span>
+                    <span style={{ flex:1, fontSize:'.83rem', fontWeight:600, color:txt }}>{dm?'Light Mode':'Dark Mode'}</span>
+                    <div style={{ width:34, height:18, borderRadius:999, background:dm?'#531697':'#d0d7e8', position:'relative', flexShrink:0 }}>
+                      <div style={{ position:'absolute', top:2, left:dm?18:2, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }} />
+                    </div>
+                  </button>
+
+                  <div style={{ borderTop:`1px solid ${dropBrd}` }}>
+                    <button onClick={()=>{setShowDeleteConfirm(true);setDropOpen(false);}}
+                      style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
+                      onMouseOver={e=>e.currentTarget.style.background='rgba(239,68,68,0.07)'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                      <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>🗑️</span>
+                      <span style={{ fontSize:'.83rem', fontWeight:600, color:'#ef4444' }}>Delete Account</span>
+                    </button>
+                    <button onClick={handleLogout}
+                      style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'11px 16px', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', fontFamily:"'Nunito',sans-serif", transition:'background .12s' }}
+                      onMouseOver={e=>e.currentTarget.style.background='rgba(239,68,68,0.07)'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                      <span style={{ fontSize:'1rem', width:22, textAlign:'center' }}>🚪</span>
+                      <span style={{ fontSize:'.83rem', fontWeight:600, color:'#ef4444' }}>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </header>
+        )}
+
+        {/*
+          ── Page content ─────────────────────────────────────────────────
+          GD Room/Report: zero padding, full height, no maxWidth constraint
+          Everything else: normal dashboard padding + maxWidth
+        */}
+        <main style={{
+          flex: 1,
+          ...(isGDRoom
+            ? { padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }
+            : { padding: '28px 28px', overflowY: 'auto', maxWidth: 1200, width: '100%' }
+          ),
+        }}>
           <Outlet context={{ darkMode: dm }} />
         </main>
+
       </div>
     </div>
   );
