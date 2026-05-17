@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import RealisticAvatar from "../components/RealisticAvatar";
+import  RealisticAvatar from "../components/RealisticAvatar";
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://pragati-backend-ixn3.onrender.com/api";
 const getToken = () => localStorage.getItem("pragati_token");
