@@ -17,10 +17,12 @@ const NAV_STUDENT = [
   { to:'/dashboard/ai-interview',  icon:'🤖', label:'AI Interviewer'},
   { to:'/dashboard/companies',     icon:'🏢', label:'Companies' },
   { to:'/dashboard/drives',        icon:'🗓️', label:'Placement Drives' },
+  { to:'/dashboard/alumni',        icon:'🎓', label:'Alumni Network' },
   { to:'/dashboard/skillpath',     icon:'🧠', label:'SkillPath AI' },
   { to:'/dashboard/gd',            icon:'🎤', label:'Group Discussion' },
   { to:'/dashboard/discussions',   icon:'💬', label:'Doubt Resolution' },
 ];
+
 const NAV_FACULTY = [
   { to:'/dashboard',                  icon:'🏠', label:'Dashboard' },
   { to:'/dashboard/students',         icon:'👥', label:'Students' },
@@ -28,6 +30,7 @@ const NAV_FACULTY = [
   { to:'/dashboard/announcements',    icon:'📢', label:'Announcements' },
   { to:'/dashboard/drives',           icon:'🗓️', label:'Placement Drives' },
   { to:'/dashboard/companies',        icon:'🏢', label:'Companies' },
+  { to:'/dashboard/alumni',           icon:'🎓', label:'Alumni Network' },
   { to:'/dashboard/notes',            icon:'📚', label:'Notes' },
   { to:'/dashboard/gd',               icon:'🎤', label:'Group Discussion' },
   { to:'/dashboard/discussions',      icon:'💬', label:'Discussions' },
@@ -35,6 +38,7 @@ const NAV_FACULTY = [
 const NAV_ADMIN = [
   { to:'/dashboard',          icon:'📊', label:'Overview' },
   { to:'/dashboard/admin',    icon:'⚙️', label:'Admin Panel' },
+  { to:'/dashboard/alumni',   icon:'🎓', label:'Alumni Network' },
   { to:'/dashboard/notes',    icon:'📚', label:'Notes' },
   { to:'/dashboard/companies',icon:'🏢', label:'Companies' },
   { to:'/dashboard/drives',   icon:'🗓️', label:'Placement Drives' },
